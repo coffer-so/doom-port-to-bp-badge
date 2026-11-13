@@ -91,10 +91,9 @@ local render=upvalue(on_tick,'render')
 local spawnX,spawnY=state.x,state.y
 state.doorOpen=true
 for _,door in ipairs(state.doors) do door.open=true end
-assert(state.width==36 and state.height==36 and state.width*state.height>=6*14*14,
-    'stress must exercise the enlarged maze')
-assert(#state.pickups==2 and #state.props==1 and state.props[1]==state.chest,
-    'stress must use final two-coin/chest objective')
+assert(state.width==31 and state.height==31,'stress must exercise the compact maze')
+assert(#state.pickups==8 and #state.props==1 and state.props[1]==state.chest,
+    'stress must use two coins, six supplies and one chest')
 -- Every legal tile at sixteen angles, plus all legal near-wall/corner offsets.
 local worldFrames=0
 for y=1,state.height-2 do
@@ -138,7 +137,8 @@ assert(over==0,'world sweep exceeds conservative budget')
 local worldPeak=peak
 peak,peakLabel,over=0,'',0
 profileAppOnly=true
-local poses={{spawnX,spawnY},{state.chest.x-1,state.chest.y}}
+local poses={{spawnX,spawnY},{state.chest.x-1,state.chest.y},
+    {13.5,12.5},{9.5,15.5},{16.5,15.5}}
 for _,coin in ipairs(state.pickups) do poses[#poses+1]={coin.x,coin.y} end
 for _,enemy in ipairs(state.enemies) do poses[#poses+1]={enemy.x,enemy.y} end
 local crowdedFrames=0
@@ -159,7 +159,7 @@ for _,p in ipairs(poses) do
                     e.y=ey+side*math.cos(angle)+forward*math.sin(angle)
                     e.alive,e.hp,e.awake,e.attack=true,2,true,1000
                 end
-                state.hp,state.dead,state.won,state.ammo=100,false,false,99
+                state.hp,state.dead,state.won,state.ammo=75,false,false,17
                 state.delivered,state.collected=false,0
                 state.coins.solana,state.coins.coffer=false,false
                 for _,coin in ipairs(state.pickups) do coin.taken=false end

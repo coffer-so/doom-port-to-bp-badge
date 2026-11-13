@@ -4,50 +4,45 @@
 local floor, sqrt, abs = math.floor, math.sqrt, math.abs
 local sin, cos, min, max = math.sin, math.cos, math.min, math.max
 local PI2 = math.pi * 2
-local WIDTH, HEIGHT = 36, 36
--- Handcrafted five-by-five room network: broad chambers, two-cell corridors,
--- six loops and several short branches. Both doors are optional shortcuts.
+local WIDTH, HEIGHT = 31, 31
+-- Handcrafted room network: 17 broad chambers and two-cell corridors, plus a
+-- central-west one-cell maze with three dead ends. Doors remain optional.
 -- West wing uses stone; the east wing and central galleries use tech panels.
 local MAP = {
-    "111111111111111111111111111111111111",
-    "100000110000011000002200000220000021",
-    "100000110000011000002200000220000021",
-    "100000000000000000003000000000000021",
-    "100000000000000000002000000000000021",
-    "100000110000011000002200000220000021",
-    "111001111111111110022222002222222221",
-    "111001111111111110022222002222222221",
-    "100000110000011000002200000220000021",
-    "100000110000011000002200000220000021",
-    "100000000000000000002200000000000021",
-    "100000000000000000002200000000000021",
-    "100000110000011000002200000220000021",
-    "122002222200222222222222002222200221",
-    "122002222200222222222222002222200221",
-    "100000220000022000002200000220000021",
-    "100000220000022000002200000220000021",
-    "100000000000022000000000000000000021",
-    "100000000000022000000000000000000021",
-    "100000220000022000002200000220000021",
-    "122002222222222220022222222222200221",
-    "111001111111111110022222222222200221",
-    "100000110000011000002200000220000021",
-    "100000110000011000002200000220000021",
-    "100000000000030000002200000000000021",
-    "100000000000010000002200000000000021",
-    "100000110000011000002200000220000021",
-    "111111111100111111222222002222200221",
-    "111111111100111111222222002222200221",
-    "100000110000011000002200000220000021",
-    "100000110000011000002200000220000021",
-    "100000000000000000000000000000000021",
-    "100000000000000000000000000000000021",
-    "100000110000011000002200000220000021",
-    "111111111111111111222222222222222221",
-    "111111111111111111111111111111111111",
+    "1111111111111111111111111111111",
+    "1000001000001000002000002222221",
+    "1000001000001000002000002222221",
+    "1000000000000000003000000000221",
+    "1000000000000000002000000222221",
+    "1000001000001000002000002222221",
+    "1110011111111110022220022222221",
+    "1000001000001110222000002000001",
+    "1000001000001110222000002000001",
+    "1000000000000000222000000000001",
+    "1000000000000111222000000000001",
+    "1000001000001111222000002000001",
+    "1220022220222022222220022220021",
+    "1000002020000022222000002000001",
+    "1000002022222022222000002000001",
+    "1000000020000002000000000000001",
+    "1000002020222222022000000000001",
+    "1000002000000000022000002000001",
+    "1220022222222220222222222220021",
+    "1110111000001000002222222000001",
+    "1110111000001000002222222000001",
+    "1110000000003000002220000000001",
+    "1111110000001000002220220000001",
+    "1111111000001000002220222000001",
+    "1111111110011111222220022220021",
+    "1111111000001111222000002000001",
+    "1111111000001111222000002000001",
+    "1110000000000000000000000000001",
+    "1111110000000111220000000000001",
+    "1111111000001111222000002000001",
+    "1111111111111111111111111111111",
 }
 -- Keyed by flat map index. Lookup runs only on the two door cells.
-local DOOR_AT = {[3 * WIDTH + 20 + 1]=1, [24 * WIDTH + 13 + 1]=2}
+local DOOR_AT = {[3 * WIDTH + 18 + 1]=1, [21 * WIDTH + 12 + 1]=2}
 local State = {}
 State.__index = State
 
@@ -72,10 +67,13 @@ function State:canStand(x, y, radius)
         and self:tile(l, b) == 0 and self:tile(r, b) == 0
 end
 
--- Exact grid DDA: shooting and monster sight cannot pass through thin walls.
-function State:visible(x0, y0, x1, y1)
+-- Exact grid DDA. Only door interaction may terminate on its closed door cell;
+-- every intervening wall and corner still blocks the trace.
+local function trace(self, x0, y0, x1, y1, targetDoor)
     local tx, ty, ex, ey = floor(x0), floor(y0), floor(x1), floor(y1)
-    if self:tile(tx, ty) ~= 0 or self:tile(ex, ey) ~= 0 then return false end
+    if self:tile(tx, ty) ~= 0 then return false end
+    if self:tile(ex, ey) ~= 0 and not (targetDoor and targetDoor.x == ex
+        and targetDoor.y == ey and self:tile(ex, ey) == 3) then return false end
     local dx, dy = x1 - x0, y1 - y0
     local sx, sy = dx < 0 and -1 or 1, dy < 0 and -1 or 1
     local ddx, ddy = dx == 0 and 1e30 or abs(1 / dx),
@@ -96,9 +94,13 @@ function State:visible(x0, y0, x1, y1)
         else
             ty, my = ty + sy, my + ddy
         end
-        if self:tile(tx, ty) ~= 0 then return false end
+        if (tx ~= ex or ty ~= ey) and self:tile(tx, ty) ~= 0 then return false end
     end
     return false
+end
+
+function State:visible(x0, y0, x1, y1)
+    return trace(self, x0, y0, x1, y1)
 end
 
 local function move(self, actor, dx, dy, radius)
@@ -172,7 +174,8 @@ function State:fire()
     return "shot"
 end
 
-function State:use()
+-- Shared by the HUD prompt and CANCEL; inspection never opens a door.
+function State:interactableDoor()
     if self.dead or self.won then return nil end
     local nearest, best = nil, 2.56
     local ca, sa = cos(self.angle), sin(self.angle)
@@ -181,11 +184,18 @@ function State:use()
         if not door.open and not (i == 1 and self.doorOpen) then
             local dx, dy = door.x + 0.5 - self.x, door.y + 0.5 - self.y
             local d2 = dx * dx + dy * dy
-            if d2 < best and dx * ca + dy * sa > 0.2 then
+            if d2 < best and dx * ca + dy * sa > 0.2
+                and trace(self, self.x, self.y, door.x + 0.5, door.y + 0.5, door) then
                 nearest, best = door, d2
             end
         end
     end
+    return nearest
+end
+
+function State:use()
+    if self.dead or self.won then return nil end
+    local nearest = self:interactableDoor()
     if nearest then
         nearest.open = true
         if nearest == self.doors[1] then self.doorOpen = true end
@@ -193,6 +203,7 @@ function State:use()
         say(self, "DOOR OPEN")
         return "door"
     end
+    local ca, sa = cos(self.angle), sin(self.angle)
     local dx, dy = self.chest.x - self.x, self.chest.y - self.y
     if dx * dx + dy * dy < 2.56 and dx * ca + dy * sa > 0.2
         and self:visible(self.x, self.y, self.chest.x, self.chest.y) then
@@ -235,6 +246,14 @@ function State:update(dt, keys)
                     self.coins.coffer, pickup.taken = true, true
                     self.collected = self.collected + 1
                     say(self, "COFFER COIN FOUND")
+                elseif pickup.kind == "medkit" and self.hp < 100 then
+                    local gain = min(25, 100 - self.hp)
+                    self.hp, pickup.taken = self.hp + gain, true
+                    say(self, "MEDKIT +" .. gain .. " HP")
+                elseif pickup.kind == "ammo" and self.ammo < 99 then
+                    local gain = min(8, 99 - self.ammo)
+                    self.ammo, pickup.taken = self.ammo + gain, true
+                    say(self, "AMMO +" .. gain)
                 end
             end
         end
@@ -257,7 +276,7 @@ function State:update(dt, keys)
                 if d2 < 0.49 and sight then
                     if enemy.attack == 0 then
                         enemy.attack = 1.0
-                        self.hp, self.damageFlash = max(0, self.hp - 8), 0.18
+                        self.hp, self.damageFlash = max(0, self.hp - 15), 0.18
                         if self.hp == 0 then self.dead = true; return end
                     end
                 else
@@ -298,28 +317,34 @@ local function new()
     local chest = {x=5.5, y=2.5, kind="chest"}
     return setmetatable({
         map = MAP, width = WIDTH, height = HEIGHT,
-        x = 1.5, y = 1.5, angle = 0, hp = 100, ammo = 99,
+        x = 1.5, y = 1.5, angle = 0, hp = 100, ammo = 17,
         kills = 0, totalKills = 6, key = false, won = false, dead = false,
-        doorX = 20, doorY = 3, doorOpen = false,
+        doorX = 18, doorY = 3, doorOpen = false,
         coins = {solana=false, coffer=false}, collected = 0, delivered = false,
         chest = chest,
         doors = {
-            {x=20, y=3, locked=false, open=false},
-            {x=13, y=24, locked=false, open=false},
+            {x=18, y=3, locked=false, open=false},
+            {x=12, y=21, locked=false, open=false},
         },
         time = 0, fireCooldown = 0, flash = 0, damageFlash = 0,
         message = "FIND TWO COINS. RETURN TO CHEST.", messageTime = 3,
         enemies = {
-            {x=10.5, y=3.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=3.5, y=17.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=10.5, y=30.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=24.5, y=31.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=31.5, y=17.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=24.5, y=3.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=9.5, y=3.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=3.5, y=15.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=9.5, y=26.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=21.5, y=27.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=27.5, y=15.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=21.5, y=3.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
         },
         pickups = {
-            {x=3.5, y=31.5, kind="solana_coin", taken=false},
-            {x=31.5, y=31.5, kind="coffer_coin", taken=false},
+            {x=14.5, y=15.5, kind="solana_coin", taken=false},
+            {x=27.5, y=27.5, kind="coffer_coin", taken=false},
+            {x=3.5, y=10.5, kind="medkit", taken=false},
+            {x=10.5, y=20.5, kind="medkit", taken=false},
+            {x=27.5, y=14.5, kind="medkit", taken=false},
+            {x=9.5, y=4.5, kind="ammo", taken=false},
+            {x=9.5, y=22.5, kind="ammo", taken=false},
+            {x=26.5, y=21.5, kind="ammo", taken=false},
         },
         props = {chest},
         _dist = {}, _queue = {}, _noKeys = {},

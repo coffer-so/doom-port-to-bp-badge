@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: GPL-2.0-or-later
--- Original low-resolution artwork for this adaptation; no Doom game assets.
+-- Original fallback/pickup artwork; licensed Freedoom detail is loaded separately.
 local art = {
   palette = {
     k=0x111316, s=0x393F43, g=0x537F3C, l=0xA3C868,
@@ -14,8 +14,6 @@ local art = {
     '.ss...ss....', 'sss...sss...',
   },
   key = {'..yyy...', '.ywwwy..', '.yy.yy..', '..yyy...', '...y....', '...yyy..', '...y....', '...yy...'},
-  ammo = {'.ssssss.', '.gyyyyg.', '.gyyyyg.', '.gyyyyg.', '.gggggg.', '.stttts.', '.ssssss.'},
-  medkit = {'.wwwwww.', 'wwrrwwww', 'wwrrwwww', 'rrrrrrww', 'rrrrrrww', 'wwrrwwww', '.wrrwww.'},
 }
 
 local detail = require("art_detail")
@@ -25,4 +23,62 @@ art.chest=detail.chest
 local coins=require('coins')
 art.palettes={}
 for name,coin in pairs(coins) do art[name]=coin.rows;art.palettes[name]=coin.palette end
+-- Original 24x24 supply pickups. Independent palettes are required because the
+-- Freedoom detail module replaces symbols in the shared enemy/weapon palette.
+art.medkit={
+  '........................',
+  '........................',
+  '........kkkkkkkk........',
+  '........kssssssk........',
+  '........ks....sk........',
+  '....kkkkkkkkkkkkkkk.....',
+  '....kgggggggggggggk.....',
+  '..kgwwwwwwwwwwwwwwwbss..',
+  '..kgwwwwwwwwwwwwwwwbss..',
+  '..kgwwwwwwwwwwwwwwwbss..',
+  '..kgwwwwwwwwwwwwwwwbss..',
+  '..kgwswwwwrrrdwwwswbss..',
+  '..kgwwwwwwrrrdwwwwwbss..',
+  '..kgwwwrrrrrrrrrdwwbss..',
+  '..kgwwwrrrrrrrrrdwwbss..',
+  '..kgwwwrrrrrrrrrdwwbss..',
+  '..kgwwwdddrrrddddwwbss..',
+  '..kgwwwwwwrrrdwwwwwbss..',
+  '..kgwwwwwwddddwwwwwbss..',
+  '..kgwwwwwwwwwwwwwwwbss..',
+  '..kgsssssssssssssssgss..',
+  '..kkkkkkkkkkkkkkkkkkkk..',
+  '........................',
+  '........................',
+}
+art.palettes.medkit={k=0x1D2224,s=0x69777A,g=0xB1BDB7,w=0xF0EEE3,
+  h=0xFFFFFF,r=0xD83A34,d=0x8B2523,b=0x394548}
+art.ammo={
+  '........................',
+  '........................',
+  '.......k...k...k........',
+  '......kyk.kyk.kyk.......',
+  '......yyo.yyo.yyo.......',
+  '......wyo.wyo.wyo.......',
+  '......wyo.wyo.wyo.......',
+  '....kkyyokyyokyyokkk....',
+  '....kdooodooodoooddk....',
+  '....kddddddddddddddk....',
+  '..kllllllllllllllllllk..',
+  '..kddddddddddddddddddk..',
+  '..kggggggggggggggggdsk..',
+  '..kggllgggggggggllgdsk..',
+  '..kggllgggggggggllgdsk..',
+  '..kggssggggyygggssgdsk..',
+  '..kggssggggyygggssgdsk..',
+  '..kggssggggyygggssgdsk..',
+  '..kggssgggggggggssgdsk..',
+  '..kggssgggggggggssgdsk..',
+  '..kgdddddddddddddddddk..',
+  '..kkkkkkkkkkkkkkkkkkkk..',
+  '........................',
+  '........................',
+}
+art.palettes.ammo={k=0x181C16,d=0x34422A,g=0x5B6B3D,l=0x94A064,
+  s=0x434E43,y=0xE9C365,o=0xAD783D,w=0xF8E4A5}
 return art

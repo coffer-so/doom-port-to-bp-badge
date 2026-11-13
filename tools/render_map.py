@@ -10,8 +10,6 @@ import math
 from pathlib import Path
 import subprocess
 
-from PIL import Image, ImageDraw, ImageFont
-
 ROOT = Path(__file__).resolve().parents[1]
 EXPORT = r'''
 local s=dofile(arg[1]).new()
@@ -27,8 +25,10 @@ for _,e in ipairs(s.enemies) do point('enemy',e.x,e.y) end
 for _,d in ipairs(s.doors) do point('door',d.x+0.5,d.y+0.5) end
 '''
 COLORS = {'spawn': '#52a7e8', 'chest': '#edbc52', 'solana_coin': '#41d8c2',
-          'coffer_coin': '#bca0f4', 'enemy': '#d6544c', 'door': '#ed8b3c'}
-SYMBOLS = {'chest': 'H', 'solana_coin': '1', 'coffer_coin': '2', 'enemy': 'Z', 'door': 'D'}
+          'coffer_coin': '#bca0f4', 'enemy': '#d6544c', 'door': '#ed8b3c',
+          'medkit': '#f4eedd', 'ammo': '#86a857'}
+SYMBOLS = {'chest': 'H', 'solana_coin': '1', 'coffer_coin': '2', 'enemy': 'E',
+           'door': 'D', 'medkit': '+', 'ammo': 'A'}
 TILES = {'0': '#ded7c0', '1': '#3b484a', '2': '#53624f', '3': '#ed8b3c'}
 
 
@@ -58,19 +58,29 @@ def load_level(lua, app):
 
 
 def render_map(level, output):
+    from PIL import Image, ImageDraw, ImageFont
+
     width, height, rows, points = level
     cell, margin, top = 22, 32, 94
     image_width = max(720, width * cell) + 2 * margin
     left = (image_width - width * cell) // 2
     legend_y = top + height * cell + 30
-    image = Image.new('RGB', (image_width, legend_y + 132), '#171d1f')
+    counts={kind:sum(point[0]==kind for point in points) for kind in COLORS}
+    legend = [('spawn', 'Spawn / facing direction'), ('chest', 'Return chest'),
+              ('solana_coin', 'Solana coin'), ('coffer_coin', 'Coffer coin'),
+              ('enemy', f'Enemy ({counts["enemy"]})'), ('door', f'Door ({counts["door"]})'),
+              ('medkit', f'Medkit ({counts["medkit"]}, +25 HP)'),
+              ('ammo', f'Ammo case ({counts["ammo"]}, +8 shots)'),
+              ('floor', 'Walkable floor'), ('wall', 'Wall')]
+    legend_height=((len(legend)+1)//2)*28+20
+    image = Image.new('RGB', (image_width, legend_y + legend_height), '#171d1f')
     draw = ImageDraw.Draw(image)
     title = ImageFont.load_default(size=28)
     font = ImageFont.load_default(size=17)
     small = ImageFont.load_default(size=11)
     draw.text((margin, 18), 'DOOM - level map', font=title, fill='#f5ead0')
-    zombies = sum(kind == 'enemy' for kind, *_ in points)
-    draw.text((margin, 56), f'{width} x {height} cells | {zombies} zombies | 2 coins | North = up',
+    coins=counts['solana_coin']+counts['coffer_coin']
+    draw.text((margin, 56), f'{width} x {height} cells | {counts["enemy"]} enemies | {coins} coins | North = up',
               font=font, fill='#b8c2bc')
     for y, row in enumerate(rows):
         for x, tile in enumerate(row):
@@ -90,15 +100,12 @@ def render_map(level, output):
             draw.polygon(vertices, fill=color, outline='#ffffff')
         else:
             draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill=color, outline='#ffffff')
-            draw.text((x, y), SYMBOLS[kind], anchor='mm', font=small, fill='#171d1f')
+            draw.text((x, y), SYMBOLS[kind], anchor='mm', font=small,
+                      fill='#c03932' if kind=='medkit' else '#171d1f')
 
-    # Draw the full initial state, including both closed shortcut doors.
+    # Draw the full initial state, including supply pickups and closed doors.
     for kind, x, y, angle in points:
         marker(kind, left + x * cell, top + y * cell, angle)
-    legend = [('spawn', 'Spawn / facing direction'), ('chest', 'Return chest'),
-              ('solana_coin', 'Solana coin'), ('coffer_coin', 'Coffer coin'),
-              ('enemy', f'Zombie ({zombies})'), ('door', 'Door'),
-              ('floor', 'Walkable floor'), ('wall', 'Wall')]
     for i, (kind, text) in enumerate(legend):
         x = margin + (i % 2) * ((image_width - 2 * margin) // 2)
         y = legend_y + (i // 2) * 28

@@ -63,12 +63,12 @@ local function mission()
   clear();mode='mission'
   ui.bg(0x262724)
   label(0,8,'THE MISSION',20,0xFDF7DC)
-  label(0,40,'Find both coins. Survive the zombies.',12,0xFDF7DC)
+  label(0,40,'Find both coins. Start with 17 shots.',12,0xFDF7DC)
   ui.image(45,68,Art.solana_coin,{scale=2,palette=Art.palettes.solana_coin})
   ui.image(128,65,Art.chest,{scale=2,palette=palette})
   ui.image(227,68,Art.coffer_coin,{scale=2,palette=Art.palettes.coffer_coin})
   label(0,129,'1 Solana + 1 Coffer -> chest',12,0xFDF7DC)
-  label(0,153,'Walk into coins to collect.',12,0xFDF7DC)
+  label(0,153,'Walk into coins, ammo and medkits.',12,0xFDF7DC)
   label(0,171,'At the chest: CANCEL to deposit.',12,0xFDF7DC)
   label(0,200,'SELECT play   CANCEL back',12,0xFDF7DC)
 end
@@ -89,7 +89,8 @@ local function hud()
     ammoLabel:text('COINS '..state.collected..'/2  AMMO '..state.ammo)
     oldHud = text
   end
-  local note = (hintTime > 0 and currentHint ~= '' and currentHint)
+  local note = (state:interactableDoor() and 'cancel to open the door')
+    or (hintTime > 0 and currentHint ~= '' and currentHint)
     or (state.messageTime > 0 and state.message)
     or (state.collected==2 and 'RETURN TO CHEST. CANCEL deposit' or 'FIND SOLANA + COFFER COINS')
   if note~=lastInfo then infoLabel:text(note);lastInfo=note end

@@ -23,6 +23,12 @@ function object:clear(_) pixelCost(self.w,self.h);mockNow=mockNow+mockRenderMs e
 function object:image(img,x,y)
   integer(x);integer(y);canvasImages=canvasImages+1
   if img.w==32 and img.h==24 then lastWeapon={image=img,x=x,y=y} end
+  if observedColors and img.palette then
+    for _,row in ipairs(img.rows or {}) do for i=1,#row do
+      local color=img.palette[row:sub(i,i)]
+      if color then observedColors[color]=true end
+    end end
+  end
   clippedCost(self,x,y,img.w,img.h)
 end
 function object:pixel(x,y,_) integer(x);integer(y) end
@@ -138,14 +144,17 @@ assert(upvalue(on_tick,'mode')=='title','repeated RIGHT must not open mission sc
 budget(on_key,'right',false)
 assert(upvalue(on_tick,'mode')=='mission','RIGHT did not open mission screen')
 local Art=require('art')
-local sawMission,sawSolana,sawChest,sawCofferCoin=false,false,false,false
+local sawMission,sawSolana,sawChest,sawCofferCoin,sawAmmoRule,sawSuppliesRule=false,false,false,false,false,false
 for _,o in ipairs(objects) do
   sawMission=sawMission or o.value=='1 Solana + 1 Coffer -> chest'
+  sawAmmoRule=sawAmmoRule or o.value=='Find both coins. Start with 17 shots.'
+  sawSuppliesRule=sawSuppliesRule or o.value=='Walk into coins, ammo and medkits.'
   sawSolana=sawSolana or (o.source==Art.solana_coin and o.opts.palette==Art.palettes.solana_coin)
   sawChest=sawChest or o.source==Art.chest
   sawCofferCoin=sawCofferCoin or (o.source==Art.coffer_coin and o.opts.palette==Art.palettes.coffer_coin)
 end
-assert(sawMission and sawSolana and sawChest and sawCofferCoin,'mission objective/native illustrations missing')
+assert(sawMission and sawSolana and sawChest and sawCofferCoin and sawAmmoRule and sawSuppliesRule,
+  'mission objective, supplies guidance or native illustrations missing')
 budget(on_key,'back',false)
 assert(upvalue(on_tick,'mode')=='title','mission CANCEL did not return to title')
 held={select=true}
@@ -163,13 +172,13 @@ held={select=true};budget(on_key,'select',false)
 local state=upvalue(on_tick,'state')
 assert(upvalue(on_tick,'mode')=='play','fresh SELECT on rules did not start game')
 for _=1,6 do budget(on_tick,80) end
-assert(state.ammo==99,'held SELECT from rules must not fire')
+assert(state.ammo==17,'held SELECT from rules must not fire')
 held={};budget(on_tick,50)
 local start=state.x
 held={up=true};budget(on_tick,80);held={}
 assert(state.x>start,'held direction does not move')
 budget(on_key,'select',false)
-assert(state.ammo==98,'fire did not consume ammo')
+assert(state.ammo==16,'fire did not consume ammo')
 held={back=true}
 for _=1,9 do budget(on_tick,80) end
 held={}
@@ -179,14 +188,72 @@ held={select=true}
 budget(on_key,'select',false)
 assert(upvalue(on_tick,'mode')=='play','resume failed')
 for _=1,6 do budget(on_tick,80) end
-assert(state.ammo==98,'held SELECT from pause must not fire')
+assert(state.ammo==16,'held SELECT from pause must not fire')
 held={};budget(on_tick,50)
 held={select=true};budget(on_tick,50)
-assert(state.ammo==97,'SELECT must fire after release and re-press')
+assert(state.ammo==15,'SELECT must fire after release and re-press')
 held={};budget(on_tick,50)
 local render=upvalue(on_tick,'render')
 local sprite=upvalue(render,'sprite')
 local depths=upvalue(sprite,'z')
+-- Match the real CANCEL interaction, including a near diagonal hidden by a
+-- wall corner. These first-door poses are shared with the core contract tests.
+local hud=upvalue(render,'hud')
+local info=upvalue(hud,'infoLabel')
+local savedHint,savedHintTime=upvalue(hud,'currentHint'),upvalue(hud,'hintTime')
+local doorScene=require('game').new()
+assert(doorScene.doors[1].x==18 and doorScene.doors[1].y==3
+  and doorScene:canStand(17.5,3.5) and doorScene:canStand(17.5,2.5)
+  and doorScene:tile(18,2)~=0,'first-door HUD fixture no longer matches the real map')
+doorScene.x,doorScene.y,doorScene.angle=17.5,3.5,0
+doorScene.message,doorScene.messageTime='STATE MESSAGE',3
+setvalue(on_tick,'state',doorScene)
+setvalue(hud,'currentHint','TRANSIENT MESSAGE');setvalue(hud,'hintTime',1)
+budget(hud)
+assert(info.value=='cancel to open the door','eligible door prompt lost priority over transient/state messages')
+budget(on_key,'back',false);budget(hud)
+assert(doorScene.doors[1].open and info.value=='DOOR OPEN','opened door retained its open-door prompt')
+doorScene.doors[1].open,doorScene.doorOpen=false,false
+doorScene.messageTime=0;setvalue(hud,'hintTime',0)
+doorScene.angle=math.pi;budget(hud)
+assert(info.value~='cancel to open the door','door prompt remained while facing away')
+doorScene.x,doorScene.y,doorScene.angle=17.5,2.5,math.pi/4;budget(hud)
+assert(info.value~='cancel to open the door','door prompt leaked through the adjacent wall corner')
+doorScene.x,doorScene.y,doorScene.angle=16.5,3.5,0;budget(hud)
+assert(info.value~='cancel to open the door','distant door displayed an interaction prompt')
+doorScene.x,doorScene.y,doorScene.angle=17.5,3.5,0
+doorScene.collected=2;budget(hud)
+assert(info.value=='cancel to open the door','eligible door did not override generic chest-return guidance')
+doorScene.x,doorScene.y,doorScene.angle=doorScene.chest.x-1,doorScene.chest.y,0;budget(hud)
+assert(info.value=='RETURN TO CHEST. CANCEL deposit','door guidance removed the chest deposit hint')
+setvalue(on_tick,'state',state)
+setvalue(hud,'currentHint',savedHint);setvalue(hud,'hintTime',savedHintTime)
+budget(hud)
+-- Walking over actual supply entities must refresh both HUD counters while
+-- leaving the two-coin mission unchanged.
+local supplies=require('game').new()
+for _,enemy in ipairs(supplies.enemies) do enemy.alive=false end
+local supplyAt={}
+for _,pickup in ipairs(supplies.pickups) do
+  if (pickup.kind=='medkit' or pickup.kind=='ammo') and not supplyAt[pickup.kind] then
+    supplyAt[pickup.kind]=pickup
+  end
+end
+assert(supplyAt.medkit and supplyAt.ammo,'real level must contain health and ammunition supplies')
+supplies.hp,supplies.ammo=50,5
+setvalue(on_tick,'state',supplies);budget(hud)
+local hpLabel,roundsLabel=upvalue(hud,'health'),upvalue(hud,'ammoLabel')
+assert(hpLabel.value=='HP 50%' and roundsLabel.value=='COINS 0/2  AMMO 5','HUD supply baseline differs')
+supplies.x,supplies.y=supplyAt.medkit.x,supplyAt.medkit.y
+budget(supplies.update,supplies,0.01,{});budget(hud)
+assert(supplyAt.medkit.taken and hpLabel.value=='HP 75%','medkit collection did not refresh HUD health')
+supplies.x,supplies.y=supplyAt.ammo.x,supplyAt.ammo.y
+budget(supplies.update,supplies,0.01,{});budget(hud)
+assert(supplyAt.ammo.taken and roundsLabel.value=='COINS 0/2  AMMO 13',
+  'ammo collection did not refresh HUD ammunition')
+assert(supplies.collected==0 and not supplies.coins.solana and not supplies.coins.coffer,
+  'ordinary supplies changed the two-coin mission counter')
+setvalue(on_tick,'state',state);budget(hud)
 -- A diagonal across a large open room crosses more than 36 grid edges.
 -- Stopping early would invent a nearer wall and wrongly occlude actors.
 local longScene={}
@@ -210,18 +277,28 @@ for _,depth in ipairs({0.25,0.20,0.19,0.17}) do
   budget(sprite,{kind='enemy'},depth,0,1,0,0,0.66)
   assert(canvasRects+canvasImages>0,'close enemy vanished at depth '..depth)
 end
-for _,kind in ipairs({'solana_coin','coffer_coin','chest'}) do
-  observedColors={}
-  budget(sprite,{kind=kind},2,0,1,0,0,0.66)
-  local allowed,count={},0
-  for _,color in pairs(Art.palettes[kind] or Art.palette) do allowed[color]=true end
-  for color in pairs(observedColors) do
-    assert(allowed[color],kind..' used another asset palette')
-    count=count+1
+assert(Art.palettes.medkit and Art.palettes.ammo,'supply sprites need independent palettes')
+local Sprites=require('sprites')
+local savedSpriteCache=upvalue(sprite,'spriteCache')
+for _,kind in ipairs({'solana_coin','coffer_coin','chest','medkit','ammo'}) do
+  for _,native in ipairs({false,true}) do
+    setvalue(sprite,'spriteCache',native and Sprites.new(Art,160,92) or {draw=function() return false end})
+    observedColors={}
+    canvasRects,canvasImages=0,0
+    budget(sprite,{kind=kind},2,0,1,0,0,0.66)
+    assert(native and canvasImages==1 or (not native and canvasRects>0 and canvasImages==0),
+      kind..' palette check did not exercise the requested native/RLE path')
+    local allowed,count={},0
+    for _,color in pairs(Art.palettes[kind] or Art.palette) do allowed[color]=true end
+    for color in pairs(observedColors) do
+      assert(allowed[color],kind..' used another asset palette')
+      count=count+1
+    end
+    assert(count>=2,kind..' did not render its detailed colors')
+    observedColors=nil
   end
-  assert(count>=2,kind..' did not render its detailed colors')
-  observedColors=nil
 end
+setvalue(sprite,'spriteCache',savedSpriteCache)
 -- Co-located monsters share identical opaque/transparent pixels. Drawing one
 -- must preserve the image without dropping a second, distinct nearby actor.
 state.x,state.y,state.angle=1.5,1.5,0
@@ -350,7 +427,7 @@ budget(on_key,'right',false)
 held={select=true};budget(on_key,'select',false)
 state=upvalue(on_tick,'state')
 for _=1,6 do budget(on_tick,80) end
-assert(upvalue(on_tick,'mode')=='play' and state.ammo==99,'mission SELECT did not start with trigger unarmed')
+assert(upvalue(on_tick,'mode')=='play' and state.ammo==17,'mission SELECT did not start with trigger unarmed')
 held={back=true};for _=1,9 do budget(on_tick,80) end
 held={};budget(on_key,'back',false)
 assert(upvalue(on_tick,'mode')=='title','mission-started game could not return to title')

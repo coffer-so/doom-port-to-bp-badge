@@ -171,6 +171,7 @@ local function render()
   view:rect(0,H//2,W,H-H//2,0x3C3530)
   view:rect(0,0,W,16,0x111A1F)
   view:rect(0,H-16,W,16,0x4D4136)
+  local rayLimit=state.width+state.height
   for x=0,W-1,WALL_STEP do
     local camera=2*(x+WALL_STEP/2)/W-1
     local rx,ry=dirX+planeX*camera,dirY+planeY*camera
@@ -180,7 +181,7 @@ local function render()
     local sdx=(rx < 0 and state.x-mx or mx+1-state.x)*ddx
     local sdy=(ry < 0 and state.y-my or my+1-state.y)*ddy
     local side,wall=0,0
-    for _=1,36 do
+    for _=1,rayLimit do
       if sdx < sdy then sdx=sdx+ddx;mx=mx+stepx;side=0
       else sdy=sdy+ddy;my=my+stepy;side=1 end
       wall=string.byte(state.map[my+1],mx+1)-48

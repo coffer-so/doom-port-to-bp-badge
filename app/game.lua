@@ -4,27 +4,50 @@
 local floor, sqrt, abs = math.floor, math.sqrt, math.abs
 local sin, cos, min, max = math.sin, math.cos, math.min, math.max
 local PI2 = math.pi * 2
-local WIDTH, HEIGHT = 14, 14
--- Three-cell-wide outer loop. Both coins and the return chest are reachable
--- without opening a door; the central passage is an optional shortcut.
+local WIDTH, HEIGHT = 36, 36
+-- Handcrafted five-by-five room network: broad chambers, two-cell corridors,
+-- six loops and several short branches. Both doors are optional shortcuts.
+-- West wing uses stone; the east wing and central galleries use tech panels.
 local MAP = {
-    "11111111111111",
-    "10000000000001",
-    "10000000000001",
-    "10000000000001",
-    "10001111110001",
-    "10002222220001",
-    "10003000030001",
-    "10002222220001",
-    "10002222220001",
-    "10001111110001",
-    "10000000000001",
-    "10000000000001",
-    "10000000000001",
-    "11111111111111",
+    "111111111111111111111111111111111111",
+    "100000110000011000002200000220000021",
+    "100000110000011000002200000220000021",
+    "100000000000000000003000000000000021",
+    "100000000000000000002000000000000021",
+    "100000110000011000002200000220000021",
+    "111001111111111110022222002222222221",
+    "111001111111111110022222002222222221",
+    "100000110000011000002200000220000021",
+    "100000110000011000002200000220000021",
+    "100000000000000000002200000000000021",
+    "100000000000000000002200000000000021",
+    "100000110000011000002200000220000021",
+    "122002222200222222222222002222200221",
+    "122002222200222222222222002222200221",
+    "100000220000022000002200000220000021",
+    "100000220000022000002200000220000021",
+    "100000000000022000000000000000000021",
+    "100000000000022000000000000000000021",
+    "100000220000022000002200000220000021",
+    "122002222222222220022222222222200221",
+    "111001111111111110022222222222200221",
+    "100000110000011000002200000220000021",
+    "100000110000011000002200000220000021",
+    "100000000000030000002200000000000021",
+    "100000000000010000002200000000000021",
+    "100000110000011000002200000220000021",
+    "111111111100111111222222002222200221",
+    "111111111100111111222222002222200221",
+    "100000110000011000002200000220000021",
+    "100000110000011000002200000220000021",
+    "100000000000000000000000000000000021",
+    "100000000000000000000000000000000021",
+    "100000110000011000002200000220000021",
+    "111111111111111111222222222222222221",
+    "111111111111111111111111111111111111",
 }
 -- Keyed by flat map index. Lookup runs only on the two door cells.
-local DOOR_AT = {[6 * WIDTH + 4 + 1]=1, [6 * WIDTH + 9 + 1]=2}
+local DOOR_AT = {[3 * WIDTH + 20 + 1]=1, [24 * WIDTH + 13 + 1]=2}
 local State = {}
 State.__index = State
 
@@ -277,26 +300,26 @@ local function new()
         map = MAP, width = WIDTH, height = HEIGHT,
         x = 1.5, y = 1.5, angle = 0, hp = 100, ammo = 99,
         kills = 0, totalKills = 6, key = false, won = false, dead = false,
-        doorX = 4, doorY = 6, doorOpen = false,
+        doorX = 20, doorY = 3, doorOpen = false,
         coins = {solana=false, coffer=false}, collected = 0, delivered = false,
         chest = chest,
         doors = {
-            {x=4, y=6, locked=false, open=false},
-            {x=9, y=6, locked=false, open=false},
+            {x=20, y=3, locked=false, open=false},
+            {x=13, y=24, locked=false, open=false},
         },
         time = 0, fireCooldown = 0, flash = 0, damageFlash = 0,
         message = "FIND TWO COINS. RETURN TO CHEST.", messageTime = 3,
         enemies = {
-            {x=5.5, y=1.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=2.5, y=5.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=2.5, y=9.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=7.5, y=11.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=11.5, y=9.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=11.5, y=4.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=10.5, y=3.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=3.5, y=17.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=10.5, y=30.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=24.5, y=31.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=31.5, y=17.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=24.5, y=3.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
         },
         pickups = {
-            {x=2.5, y=10.5, kind="solana_coin", taken=false},
-            {x=11.5, y=10.5, kind="coffer_coin", taken=false},
+            {x=3.5, y=31.5, kind="solana_coin", taken=false},
+            {x=31.5, y=31.5, kind="coffer_coin", taken=false},
         },
         props = {chest},
         _dist = {}, _queue = {}, _noKeys = {},

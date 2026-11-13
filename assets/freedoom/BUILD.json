@@ -1,8 +1,10 @@
 {
   "upstream_commit": "21d783c481af9233fa72305b40eb247fa966b49a",
-  "sprite_colors": 24,
+  "enemy_upstream_commit": "56183b1e0689e53cbda9eb48025bf07b32837471",
+  "weapon_colors": 24,
+  "enemy_colors": 12,
   "sprite_runs": {
-    "enemy": 238,
+    "enemy": 279,
     "weapon": 191
   },
   "texture_runs_per_material": [
@@ -13,11 +15,11 @@
   "texture_runs_all_shades": 540,
   "maximum_texture_column_runs": 3,
   "sha256": {
-    "app/art_detail.lua": "43368fc3e5d4b8d39d205d57b485041fa04c7babbe49f6f51aa12c0e05aa1742",
+    "app/art_detail.lua": "601a8a62e9dd523e83f1e55eb484e8077d1a0fc2b43f4eb1f3e36c2e7e238a09",
     "app/textures.lua": "c454371728c17097aa3dfac8c233113c7c85659aea37a897077276617b355dfc",
-    "assets/freedoom/previews/enemy.png": "7bbceb0038aa9cdca36b6e84873da9c8d5b74a0d8ee44e7506baf80c210582a0",
+    "assets/freedoom/previews/enemy.png": "478a0bdcd00c700275dd3532ecf48d96c7127a367b8d1a6c784056bdf8f4446a",
     "assets/freedoom/previews/weapon.png": "287e6d749e49231f7e82e922cf0269c1b46c51cc68e6a6726eb5ae65338dd822",
-    "assets/freedoom/previews/badge-assets.png": "535b08c80ca21812e4ce8147a92eec03fca9108c31e26c4e5bbead93be28ee8b",
+    "assets/freedoom/previews/badge-assets.png": "c55772f54889256d558297bb1d9fa23f2ec0b884306dbed47faaead94dacc9ad",
     "assets/freedoom/previews/texture-sources.png": "5a604f871de7fc9aeed4fbcf6a29486f5845f27e2545a6d0293409f1f05c3f3a",
     "assets/freedoom/previews/texture-1.png": "8dcc5316a2ede71ac69289ca4fee9a3f879b5339a99767377deb89ca4791ff6d",
     "assets/freedoom/previews/texture-2.png": "986c05f7ba7c37a9c10a7f427cb9655a3e79e049f5df399ef790c3b30de330f8",

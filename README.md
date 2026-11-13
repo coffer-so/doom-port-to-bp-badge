@@ -8,13 +8,18 @@ You land in a deserted facility. The lights still work. The people don't.
 
 Somewhere beyond the corridors, two coins float above the floor: one Solana, one Coffer. Fight or evade the zombies, collect both, and bring them back to the ornate Coffer chest. Leave either behind and the job isn't finished.
 
-One compact 14×14 loop. Physical buttons. No touchscreen controls.
+One 36×36 maze: 25 rooms, branching corridors and loops. Physical buttons. No touchscreen controls.
 
 Press SELECT on the title to open the mission guide, then SELECT again to start the game.
 
 ![DOOM title screen with Coffer branding](docs/images/title.png)
 ![First-person gameplay on the Solana badge](docs/images/gameplay.png)
 ![Collect both coins and return to the Coffer chest](docs/images/objective.png)
+![Level map with spawn, coins, chest, zombies and doors](docs/images/map.png)
+
+Enemies use a brown, red-eyed, spiky imp-style design, adapted from freely licensed historical Freedoom artwork.
+
+![Enemy, pistol and wall artwork preview](assets/freedoom/previews/badge-assets.png)
 
 ## Controls
 
@@ -45,7 +50,7 @@ Coffer - we generate yield on RWA baskets. APY comes from swaps between the toke
 
 ### Install from the Solana OS App Store
 
-Version **1.0.1** is published and listed as **DOOM** in **Games**, ID `doom-by-coffer`. The exact same version is installed and tested on the development badge through USB.
+Version **1.0.2** is published and listed as **DOOM** in **Games**, ID `doom-by-coffer`. The exact same version is installed and tested on the development badge through USB.
 
 On a [Solana Breakpoint 2026 badge](https://solana.com/breakpoint/badge), connect Wi-Fi, open **App Store**, search **DOOM**, select **DOOM** by **sepezho** (the @coffer_so team) and install it. Open it from **Apps → DOOM**. USB installation is available below.
 
@@ -61,7 +66,7 @@ cd doom-port-to-bp-badge
 python3 tools/package.py
 ```
 
-Output: `dist/doom-by-coffer-1.0.1.zip`. Its filename follows the ID and version in `app/app.json`. It contains only the app and its assets, never tests, photographs, credentials or the legacy C engine.
+Output: `dist/doom-by-coffer-1.0.2.zip`. Its filename follows the ID and version in `app/app.json`. It contains only the app and its assets, never tests, photographs, credentials or the legacy C engine.
 
 ### Install and test over USB
 
@@ -111,6 +116,15 @@ Use the Lua make target appropriate for your OS. Tests cover a complete coin-col
 | `app/app.json` | Permanent ID, display name, version, exact store text and permissions |
 | `assets/`, `tools/prepare_art.py` | Editable logo sources and PNG export |
 | `assets/freedoom/`, `tools/compile_freedoom.py` | Pinned ready-made sprites/textures, deterministic offline conversion |
+| `tools/render_map.py` | Top-down map exported from the actual Lua level |
+
+Rebuild the level map after changing `app/game.lua` (Lua and Pillow via uv):
+
+```sh
+uv run tools/render_map.py --lua lua5.5
+```
+
+The tool runs `game.lua` through Lua and exports its initial state as text; Python does not parse or evaluate Lua source. The PNG includes the spawn direction, chest, both coins, zombies, doors and a legend. Use `--lua work/lua32/lua-5.5.1/src/lua` for the local 32-bit build above.
 
 The prebuilt artwork is included. To rebuild edited SVGs/logos on macOS:
 
@@ -139,14 +153,16 @@ git commit -m "Update DOOM badge game"
 git push origin main
 ```
 
-The App Store upload is a separate step: build `dist/doom-by-coffer-1.0.1.zip`, import it in the submission form, check **Games**, **Listed** and LED-only permissions, then publish. For future releases, increment the version in `app/app.json`, keep ID `doom-by-coffer`, and run `python3 tools/package.py`; the ZIP filename follows the manifest automatically. Use `--out` only to override the output path.
+The App Store upload is a separate step: build `dist/doom-by-coffer-1.0.2.zip`, import it in the submission form, check **Games**, **Listed** and LED-only permissions, then publish. For future releases, increment the version in `app/app.json`, keep ID `doom-by-coffer`, and run `python3 tools/package.py`; the ZIP filename follows the manifest automatically. Use `--out` only to override the output path.
 
 ### Architecture and limits
 
-Original Lua raycaster, one 14×14 level, six zombies, exactly two coins and one chest. A three-tile-wide loop connects the objective; two doors provide an optional shortcut. The coin-and-return route is 32 grid steps, reduced from 80, and requires no doors. Canvas 160×92 at 2×; 40 wall rays, prelit textures, bounded native wall and sprite caches, and a cheap input tick after three expensive renders. Sprite detail is retained while wall columns use a lower-detail mode. RGB animations update at most 10 times per second. The 1.0.1 Solana OS 2.1.0 device sample measured **8 FPS** (about 8.5), render CPU averaging **72 ms** and peaking at **128 ms**, with physical movement during the run. Version 1.0.0 measured about 10 FPS in a different scene; these are not identical-camera comparisons. The requested 30 FPS has not been achieved. See `docs/validation.md` for measurements and checks.
+Original Lua raycaster, one 36×36 maze (1,296 cells, 6.6 times the previous 14×14 footprint), six zombies, exactly two coins and one chest. Its 25 rooms connect through two-tile-wide corridors, branches and six large loops. Both coins and the return chest are reachable with both doors closed; the shortest complete route is 130 grid steps. The top-down map above is generated from the same Lua data as the game.
+
+Canvas 160×92 at 2×; 40 wall rays, prelit textures, bounded native wall and sprite caches, and a cheap input tick after three expensive renders. Ray traversal is bounded by the map width plus height. Sprite detail is retained while wall columns use a lower-detail mode. RGB animations update at most 10 times per second. The 1.0.2 Solana OS 2.1.0 startup sample measured **11 FPS** (about 12), render CPU averaging **36 ms** and peaking at **110 ms**. Moving/combat scenes can cost more; the 1.0.1 moving sample measured about 8.5 FPS. These are not identical-camera comparisons. The requested 30 FPS has not been achieved. See `docs/validation.md` for measurements and checks.
 
 This is an original Doom-style adaptation, not the id Software C engine or a WAD-compatible source port. The original Doomgeneric preparation snapshot remains in `vendor/doomgeneric` and is excluded from the application. [Port research](docs/research.md) and [platform details](docs/platform.md) document the alternatives and constraints.
 
-Code, original map and Coffer chest: GPL-2.0-or-later. Ready-made zombie, pistol and wall artwork: [Freedoom](https://freedoom.github.io/about.html), BSD-3-Clause. These are freely reusable Doom-style assets, not the exact id Software game graphics. Source revisions, licenses, previews and rebuild instructions are in [the artwork guide](docs/assets.md). Brand logos retain their owners' rights. See `LICENSE`, `NOTICE.md` and `app/credits.txt`.
+Code, original map and Coffer chest: GPL-2.0-or-later. The brown, red-eyed, spiky enemy is an edited historical Freedoom demon. Pistol and wall artwork: [Freedoom](https://freedoom.github.io/about.html), BSD-3-Clause. These are freely reusable Doom-style assets, not the exact id Software game graphics. Source revisions, licenses, previews and rebuild instructions are in [the artwork guide](docs/assets.md). Brand logos retain their owners' rights. See `LICENSE`, `NOTICE.md` and `app/credits.txt`.
 
 have fun!

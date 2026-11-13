@@ -16,6 +16,8 @@ APP = ROOT / 'app' if (ROOT / 'app').is_dir() else ROOT
 ASSETS = ROOT / 'assets' / 'freedoom'
 COMMIT = '21d783c481af9233fa72305b40eb247fa966b49a'
 SYMBOLS = 'abcdefghijklmnopqrstuvwxyz0123456789'
+ENEMY_SYMBOLS = '0123456789yz'
+HISTORICAL_COMMIT = '56183b1e0689e53cbda9eb48025bf07b32837471'
 SHADE = (256, 220, 188, 156, 124)
 MAX_COLUMN_RUNS = 3
 MAX_MATERIAL_RUNS = 36
@@ -26,6 +28,7 @@ def source_files():
     assert manifest['commit'] == COMMIT and manifest['license'] == 'BSD-3-Clause'
     out = {}
     for entry in manifest['files']:
+        assert entry.get('commit', COMMIT) in (COMMIT, HISTORICAL_COMMIT)
         data = (ASSETS / entry['local_path']).read_bytes()
         assert len(data) == entry['size'], entry['upstream_path']
         assert hashlib.sha256(data).hexdigest() == entry['sha256'], entry['upstream_path']
@@ -108,6 +111,80 @@ def indexed_sprite(image, palette):
     return rows, output
 
 
+def imp(files):
+    """Brown/spiked edit of Lokito's ready-made BSD Freedoom humanoid demon."""
+    image = load_image(files, 'sprites/lokito/bossa1.gif')
+    # Historical GIFs used exact cyan as a color key instead of an alpha channel.
+    for y in range(image.height):
+        for x in range(image.width):
+            if image.getpixel((x, y))[:3] == (0, 255, 255):
+                image.putpixel((x, y), (0, 0, 0, 0))
+    image = image.crop(image.getbbox()).resize((24, 34), Image.Resampling.NEAREST)
+    result = Image.new('RGBA', (24, 36))
+    result.alpha_composite(image, (0, 2))
+    palette = [(30,18,14), (66,38,21), (94,54,29), (125,74,40),
+               (159,104,59), (188,134,80), (210,161,106),
+               (141,121,82), (230,210,162), (255,37,18), (126,22,16), (17,11,9)]
+    for y in range(36):
+        for x in range(24):
+            pixel = result.getpixel((x, y))
+            if pixel[3]:
+                shade = min(6, ((sum(pixel[:3]) // 3) * 7) // 256)
+                result.putpixel((x, y), (*palette[shade], 255))
+    protected = set()
+    def put(x, y, index):
+        result.putpixel((x, y), (*palette[index], 255));protected.add((x,y))
+    # Original small facial edit: glowing red eyes, dark muzzle and ivory fangs.
+    head = ('..1122..', '.123432.', '12345432', '12333321',
+            '12911921', '.223322.', '.238832.', '.221122.', '..1111..')
+    for y, row in enumerate(head, 4):
+        for x, symbol in enumerate(row, 10):
+            if symbol != '.':put(x,y,int(symbol))
+    # Original ivory shoulder spines and claw tips; no id Software pixels.
+    for x,y in [(4,6),(4,7),(5,7),(4,8),(5,8),(6,8),
+                (1,9),(2,10),(3,10),(2,11),(3,11),(4,11),
+                (0,13),(0,14),(1,14),(2,15),
+                (20,6),(20,7),(19,8),(20,8),(19,9),
+                (23,9),(22,10),(23,10),(21,11),(22,11),
+                (23,13),(22,14),(23,14),(5,26),(6,27),(7,27),
+                (22,27),(21,28),(20,29),(6,34),(8,34),(10,34)]:
+        put(x,y,8 if (x+y)%3 else 7)
+    # Merge the cheapest adjacent brown bands; preserve alpha, eyes and spines.
+    # Fixed 279-run budget equals the earlier original sprite's fallback cost.
+    def bands():
+        columns=[]
+        for x in range(24):
+            runs=[]
+            for y in range(36):
+                color=result.getpixel((x,y))
+                if not color[3]:continue
+                if runs and runs[-1][1]==y and runs[-1][2]==color:
+                    runs[-1][1]=y+1;runs[-1][3]|=(x,y) in protected
+                else:runs.append([y,y+1,color,(x,y) in protected])
+            columns.append(runs)
+        return columns
+    columns=bands()
+    while sum(map(len,columns))>279:
+        candidates=[]
+        for x,runs in enumerate(columns):
+            for i,(a,b) in enumerate(zip(runs,runs[1:])):
+                if a[1]!=b[0] or a[3] or b[3]:continue
+                color=min(palette[:7],key=lambda c:(
+                    distance(c,a[2])*(a[1]-a[0])+distance(c,b[2])*(b[1]-b[0]),c))
+                cost=distance(color,a[2])*(a[1]-a[0])+distance(color,b[2])*(b[1]-b[0])
+                candidates.append((cost,x,i,color))
+        assert candidates, 'No safe brown-band merge available'
+        _,x,i,color=min(candidates)
+        a,b=columns[x][i:i+2]
+        for y in range(a[0],b[1]):result.putpixel((x,y),(*color,255))
+        columns=bands()
+    rows=[]
+    for y in range(36):
+        rows.append(''.join(ENEMY_SYMBOLS[palette.index(result.getpixel((x,y))[:3])]
+                            if result.getpixel((x,y))[3] else '.' for x in range(24)))
+    return rows,result,palette
+
+
 def texture(files, patches):
     image = Image.new('RGBA', (128, 128), (20, 21, 22, 255))
     for name, x, y in patches:
@@ -173,15 +250,17 @@ def png_bytes(image):
     return buffer.getvalue()
 
 
-def lua_sprites(palette, sprites, overlay):
+def lua_sprites(palette, enemy_palette, sprites, overlay):
     lines = ['-- SPDX-License-Identifier: BSD-3-Clause AND GPL-2.0-or-later',
              '-- Generated by tools/compile_freedoom.py; do not hand edit.',
-             '-- Enemy/pistol: Freedoom contributors, BSD-3-Clause; see credits.txt.',
+             '-- Edited imp/pistol: Freedoom contributors, BSD-3-Clause; see credits.txt.',
              '-- Original Coffer chest: GPL-2.0-or-later. Dot is transparent.',
              'return {', '  palette_additions = {']
     for symbol, color in overlay['palette'].items():
         lines.append(f'    {symbol}=0x{color:06X},')
     for symbol, color in zip(SYMBOLS, palette):
+        lines.append(f"    ['{symbol}']=0x{rgb(color):06X},")
+    for symbol, color in zip(ENEMY_SYMBOLS, enemy_palette):
         lines.append(f"    ['{symbol}']=0x{rgb(color):06X},")
     lines.append('  },')
     for name, rows in {**sprites, 'chest': overlay['chest']}.items():
@@ -235,10 +314,11 @@ def build():
     files = source_files()
     overlay = json.loads((ASSETS / 'project-overlay.json').read_text())
     assert len(overlay['chest']) == 28 and all(len(row) == 32 for row in overlay['chest'])
-    enemy = sprite(files, 'sprites/possa1.png', (24, 36))
+    old_enemy = sprite(files, 'sprites/possa1.png', (24, 36))
     weapon = sprite(files, 'sprites/pisga0.png', (32, 24))
-    palette = palette_for([enemy, weapon], 24)
-    enemy_rows, enemy = indexed_sprite(enemy, palette)
+    # Preserve the 1.0.1 weapon's exact palette and visible RGB values.
+    palette = palette_for([old_enemy, weapon], 24)
+    enemy_rows, enemy, enemy_palette = imp(files)
     weapon_rows, weapon = indexed_sprite(weapon, palette)
     assert len(palette) <= len(SYMBOLS)
     specs = [
@@ -254,13 +334,13 @@ def build():
         texture_images.append(reduced)
         source_images.append(source)
     output = {
-        APP / 'art_detail.lua': lua_sprites(palette, {'enemy': enemy_rows, 'weapon': weapon_rows}, overlay),
+        APP / 'art_detail.lua': lua_sprites(palette, enemy_palette, {'enemy': enemy_rows, 'weapon': weapon_rows}, overlay),
         APP / 'textures.lua': lua_textures(materials),
         ASSETS / 'previews' / 'enemy.png': png_bytes(enemy),
         ASSETS / 'previews' / 'weapon.png': png_bytes(weapon),
         ASSETS / 'previews' / 'badge-assets.png': png_bytes(contact_sheet(
             [enemy, weapon, *texture_images],
-            ['Freedoom zombie / 24x36', 'Freedoom pistol / 32x24', 'STARTAN3 / 16x8',
+            ['Edited Freedoom imp / 24x36', 'Freedoom pistol / 32x24', 'STARTAN3 / 16x8',
              'STARG3 / 16x8', 'BIGDOOR2 / 16x8'], 8)),
         ASSETS / 'previews' / 'texture-sources.png': png_bytes(contact_sheet(
             source_images, ['Freedoom STARTAN3', 'Freedoom STARG3', 'Freedoom BIGDOOR2'],
@@ -272,7 +352,11 @@ def build():
     for name, rows in [('enemy', enemy_rows), ('weapon', weapon_rows)]:
         sprite_runs[name] = sum(sum(b != '.' and a != b for a, b in zip('.' + column, column + '.'))
                                 for column in [''.join(row[x] for row in rows) for x in range(len(rows[0]))])
-    stats = {'upstream_commit': COMMIT, 'sprite_colors': len(palette), 'sprite_runs': sprite_runs,
+    assert hashlib.sha256(png_bytes(weapon)).hexdigest() == '287e6d749e49231f7e82e922cf0269c1b46c51cc68e6a6726eb5ae65338dd822'
+    assert hashlib.sha256(lua_textures(materials)).hexdigest() == 'c454371728c17097aa3dfac8c233113c7c85659aea37a897077276617b355dfc'
+    assert sprite_runs['enemy'] <= 279
+    stats = {'upstream_commit': COMMIT, 'enemy_upstream_commit': HISTORICAL_COMMIT,
+             'weapon_colors': len(palette), 'enemy_colors': len(enemy_palette), 'sprite_runs': sprite_runs,
              'texture_runs_per_material': [sum(map(len, columns)) for columns in materials],
              'texture_runs_all_shades': sum(sum(map(len, columns)) for columns in materials) * 5,
              'maximum_texture_column_runs': max(len(runs) for columns in materials for runs in columns),

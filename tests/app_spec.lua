@@ -187,6 +187,23 @@ held={};budget(on_tick,50)
 local render=upvalue(on_tick,'render')
 local sprite=upvalue(render,'sprite')
 local depths=upvalue(sprite,'z')
+-- A diagonal across a large open room crosses more than 36 grid edges.
+-- Stopping early would invent a nearer wall and wrongly occlude actors.
+local longScene={}
+for key,value in pairs(state) do longScene[key]=value end
+setmetatable(longScene,getmetatable(state))
+longScene.width,longScene.height=36,36
+longScene.map={string.rep('1',36)}
+for y=2,35 do longScene.map[y]='1'..string.rep('0',34)..'1' end
+longScene.map[36]=string.rep('1',36)
+longScene.x,longScene.y,longScene.angle=1.5,1.5,math.pi/4
+longScene.enemies,longScene.pickups,longScene.props={},{},{}
+setvalue(on_tick,'state',longScene)
+budget(render)
+local camera=2*(80+2)/160-1
+local expectedDepth=(35-1.5)/(math.sqrt(0.5)*(1+0.66*camera))
+assert(math.abs(depths[81]-expectedDepth)<0.001,'long ray stopped before the real map boundary')
+setvalue(on_tick,'state',state)
 for i=1,160 do depths[i]=99 end
 for _,depth in ipairs({0.25,0.20,0.19,0.17}) do
   canvasRects,canvasImages=0,0

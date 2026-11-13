@@ -1,0 +1,4 @@
+# Retain upstream license notices and contributor lists byte for byte.
+app/credits.txt whitespace=-blank-at-eol
+assets/freedoom/source/old_COPYING whitespace=-blank-at-eol
+assets/freedoom/source/old_CREDITS whitespace=-blank-at-eol

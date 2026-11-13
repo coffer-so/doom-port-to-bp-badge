@@ -156,6 +156,103 @@
       "git_sha": "dd09adbc7c54a75169c1aedb52bb69926bd267af",
       "sha256": "941246bcae14d481fb3ac32e04762185817b139ee15d3f346c929911c634017c",
       "size": 1151
+    },
+    {
+      "upstream_path": "sprites/trooa1.png",
+      "local_path": "source/sprites_trooa1.png",
+      "git_sha": "ca90dce5ec0a33cabe6148c314ce19d911f28e21",
+      "sha256": "d2838ae0e6d277996cdd2c25c7040f93f624760d12acc72ab3d35071f4b5f4d6",
+      "size": 1819
+    },
+    {
+      "upstream_path": "sprites/trooc1.png",
+      "local_path": "source/sprites_trooc1.png",
+      "git_sha": "492d76142dcc1c10585077a390da4e02048b9720",
+      "sha256": "b997783da184e3e4e93daf4b2dc62e164a7867bd0caa68782b49bd30b8473cfe",
+      "size": 1812
+    },
+    {
+      "upstream_path": "sprites/trooe1.png",
+      "local_path": "source/sprites_trooe1.png",
+      "git_sha": "50172ae6755b7e215613c87ab01655833c7731cd",
+      "sha256": "a7b211d5f3435c04929c8f40468d91320cb85b44181384c61d2f0771c8f432b2",
+      "size": 1585
+    },
+    {
+      "upstream_path": "sprites/bos2a1.png",
+      "local_path": "source/sprites_bos2a1.png",
+      "git_sha": "1e19e0befa6e7bb5f12882dfb7a73133e3699825",
+      "sha256": "695f3baec8ba8c5a8a2880764c17457df04b1daecf3575244c714f9f44aa6a17",
+      "size": 2538
+    },
+    {
+      "upstream_path": "sprites/bossa1.png",
+      "local_path": "source/sprites_bossa1.png",
+      "git_sha": "bec17ef07ef2e7e1c0c1f420bd608135336986ea",
+      "sha256": "d87a02ca506b2a946196ac8ca6522e2008efb259645b9751b17d24c29ba5450b",
+      "size": 2393
+    },
+    {
+      "upstream_path": "sprites/sarga1.png",
+      "local_path": "source/sprites_sarga1.png",
+      "git_sha": "48b03d26d355d30028b30c649c951e5bbae21f04",
+      "sha256": "f01a9a22e26d93887076237a860911fda52c2e31c67d3029d1e8280f67e38600",
+      "size": 2135
+    },
+    {
+      "upstream_path": "sprites/vilea1d1.png",
+      "local_path": "source/sprites_vilea1d1.png",
+      "git_sha": "16589456b81bf2f0b77705c29d0b9d9d31ab4d84",
+      "sha256": "f55f88cddfb5ffcaedf6fe8b60f9423bc1e9f13d324fe94821eb73416f3a9c7b",
+      "size": 2341
+    },
+    {
+      "upstream_path": "sprites/trooa1.gif",
+      "local_path": "source/old_trooa1.gif",
+      "git_sha": "2ba6df93dd4fc5269988010eca1c1804a57fb8c8",
+      "sha256": "77c5fb3234fc7dab1eec5e0935013d1c518f6822ad557235f2efdc4ababaa8c0",
+      "size": 20,
+      "commit": "56183b1e0689e53cbda9eb48025bf07b32837471"
+    },
+    {
+      "upstream_path": "COPYING",
+      "local_path": "source/old_COPYING",
+      "git_sha": "a8555ca54463656c8a58fdf4c10a6f6645a42e2b",
+      "sha256": "9a9bca6ce790116516053057de25b7a8b67da7a9f54a45e474f98eec905608c5",
+      "size": 1611,
+      "commit": "56183b1e0689e53cbda9eb48025bf07b32837471"
+    },
+    {
+      "upstream_path": "sprites/nightfang/trooa1.gif",
+      "local_path": "source/old_nightfang_trooa1.gif",
+      "commit": "56183b1e0689e53cbda9eb48025bf07b32837471",
+      "git_sha": "a751ac1435d332c018b1345bfeae507135692fa7",
+      "sha256": "160fa1a4ce081c8442e0eea24833a40845205506d160b00bb86d373d6ee0b19d",
+      "size": 2062
+    },
+    {
+      "upstream_path": "sprites/lokito/bossa1.gif",
+      "local_path": "source/old_sprites_lokito_bossa1.gif",
+      "commit": "56183b1e0689e53cbda9eb48025bf07b32837471",
+      "git_sha": "bdaf871e959433553dd9b5eef081e3d5d9114edd",
+      "sha256": "a10117fbcd5068c400f081348b6878231efc4e1d58ffc854eb04472d028fdfa8",
+      "size": 3010
+    },
+    {
+      "upstream_path": "sprites/catoptromancy/bos2a1c1.gif",
+      "local_path": "source/old_sprites_catoptromancy_bos2a1c1.gif",
+      "commit": "56183b1e0689e53cbda9eb48025bf07b32837471",
+      "git_sha": "85a75395d5ae78e0e3f7bd1371e5b2b7b8d2f698",
+      "sha256": "827616b4ab91fef93926b48584b5bdb4040661f80cb0121f0624b6b57c9aa7a6",
+      "size": 2354
+    },
+    {
+      "upstream_path": "CREDITS",
+      "local_path": "source/old_CREDITS",
+      "commit": "56183b1e0689e53cbda9eb48025bf07b32837471",
+      "git_sha": "e93018b1fbd75c976c558e5fa04d95b2dee89673",
+      "sha256": "b8c9264a7f4fdcbb21d2fcf2d814fc6c06006b648463e8a4b16dfce91d5eee89",
+      "size": 11028
     }
   ]
 }

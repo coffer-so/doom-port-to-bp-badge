@@ -90,6 +90,9 @@ local state=upvalue(on_tick,'state')
 local render=upvalue(on_tick,'render')
 local spawnX,spawnY=state.x,state.y
 state.doorOpen=true
+for _,door in ipairs(state.doors) do door.open=true end
+assert(state.width==36 and state.height==36 and state.width*state.height>=6*14*14,
+    'stress must exercise the enlarged maze')
 assert(#state.pickups==2 and #state.props==1 and state.props[1]==state.chest,
     'stress must use final two-coin/chest objective')
 -- Every legal tile at sixteen angles, plus all legal near-wall/corner offsets.
@@ -112,6 +115,24 @@ for y=1,state.height-2 do
         end
     end
 end
+-- Exercise both sides of every closed shortcut as well as every opened cell.
+state.doorOpen=false
+for _,door in ipairs(state.doors) do door.open=false end
+for _,door in ipairs(state.doors) do
+    for _,d in ipairs({{1,0},{-1,0},{0,1},{0,-1}}) do
+        local x,y=door.x+d[1]+0.5,door.y+d[2]+0.5
+        if state:canStand(x,y) then
+            state.x,state.y=x,y
+            for a=0,15 do
+                state.angle=a*math.pi/8
+                budget(('closed door %d %d a%d'):format(door.x,door.y,a),render)
+                worldFrames=worldFrames+1
+            end
+        end
+    end
+end
+state.doorOpen=true
+for _,door in ipairs(state.doors) do door.open=true end
 print('world stress: '..worldFrames..' renders; peak '..peak..' ('..peakLabel..')')
 assert(over==0,'world sweep exceeds conservative budget')
 local worldPeak=peak

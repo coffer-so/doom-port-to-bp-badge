@@ -12,10 +12,14 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = ('main.lua', 'app.json', 'game.lua', 'art.lua', 'art_detail.lua', 'textures.lua', 'surfaces.lua', 'sprites.lua', 'coins.lua', 'rgb.lua', 'art/doom.png', 'art/coffer.png', 'credits.txt', 'license.txt')
 
 
-def package(root: Path, output: Path) -> None:
+def package(root: Path, output: Path | None = None) -> None:
     manifest = json.loads((root / 'app.json').read_text())
     if not re.fullmatch(r'[a-z0-9-]{3,24}', manifest['id']):
         raise ValueError('Invalid app id')
+    if not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z.+-]{0,63}', manifest['version']):
+        raise ValueError('Invalid app version')
+    if output is None:
+        output = ROOT / 'dist' / f"{manifest['id']}-{manifest['version']}.zip"
     if manifest['permissions'] != ['led'] or manifest.get('hosts'):
         raise ValueError('This game only needs the led permission and no network hosts')
     data = {name: (root / name).read_bytes() for name in FILES}
@@ -39,6 +43,6 @@ def package(root: Path, output: Path) -> None:
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--root', type=Path, default=ROOT / 'app')
-    p.add_argument('--out', type=Path, default=ROOT / 'dist' / 'doom-by-coffer-1.0.0.zip')
+    p.add_argument('--out', type=Path, help='Override the manifest-derived ZIP filename')
     args = p.parse_args()
     package(args.root, args.out)

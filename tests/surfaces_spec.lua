@@ -107,11 +107,47 @@ check(cache:draw(canvas,8,0,90,0,92,1,1,1,2),'new visible height failed')
 local before=loads
 check(cache:draw(canvas,10,2,92,2,92,1,1,1,2),'translation cache hit failed')
 check(loads==before,'absolute screen position incorrectly part of cache key')
-cache:beginFrame()
-check(cache:draw(canvas,0,0,80,0,80,1,2,2,2),'canonical source initial draw failed')
+-- Real artwork may change which columns repeat. Discover an actual duplicate,
+-- then test canonicalisation separately with equal but distinct RLE tables.
+local signatures,equalPair={},nil
+for material,shades in ipairs(Textures) do for shade,columns in ipairs(shades) do
+  for texX,runs in ipairs(columns) do
+    local signature=table.concat(runs,':')
+    local previous=signatures[signature]
+    if previous and previous.runs~=runs and not equalPair then
+      equalPair={previous,{material=material,shade=shade,texX=texX,runs=runs}}
+    elseif not previous then
+      signatures[signature]={material=material,shade=shade,texX=texX,runs=runs}
+    end
+  end
+end end
+if equalPair then
+  cache=Surfaces.new(Textures,160,92);cache:beginFrame()
+  local a,b=equalPair[1],equalPair[2]
+  check(cache:draw(canvas,0,0,80,0,80,a.material,a.shade,a.texX,2),'canonical source initial draw failed')
+  before=loads
+  local image=canvas.last.image
+  check(cache:draw(canvas,2,0,80,0,80,b.material,b.shade,b.texX,2),'identical source pattern lookup failed')
+  check(loads==before and canvas.last.image==image,'identical artwork columns rebuilt native strips')
+end
+local dedupTextures={{{
+  {0,4,0x112233,4,8,0x667788},
+  {0,4,0x112233,4,8,0x667788},
+  {0,4,0x112233,4,8,0xBBCCDD},
+}}}
+local dedup=Surfaces.new(dedupTextures,160,92);dedup:beginFrame()
+check(dedup:draw(canvas,0,0,80,0,80,1,1,1,2),'dedup fixture initial draw failed')
 before=loads
-check(cache:draw(canvas,2,0,80,0,80,1,2,3,2),'identical source pattern lookup failed')
-check(loads==before,'identical RLE patterns should share native strips')
+local shared=canvas.last.image
+check(dedup:draw(canvas,2,0,80,0,80,1,1,2,2),'equal fixture draw failed')
+check(loads==before and canvas.last.image==shared and dedup.count==1,
+  'equal but independently allocated RLE columns must share one native image')
+check(dedup:draw(canvas,4,0,80,0,80,1,1,3,2),'distinct fixture draw failed')
+local different=canvas.last.image
+check(loads==before+1 and different~=shared and dedup.count==2,
+  'different RLE colors collided in the canonical key')
+check(different.palette[different.rows[41]:sub(1,1)]==0xBBCCDD,
+  'canonical key reused the other column color')
 cache:beginFrame()
 check(cache:draw(canvas,-1,0,92,0,92,1,1,1,2),'left clipping failed')
 check(canvas.last.x==0 and canvas.last.image.w==1,'left clipping dimensions')

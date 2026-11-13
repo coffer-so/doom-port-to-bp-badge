@@ -299,8 +299,14 @@ local function play()
   if not gunImage then gunImage=ui.load(Art.weapon,{palette=palette}) end
   if not gunFireImage then
     local lit={}
-    for key,color in pairs(palette) do lit[key]=color end
-    lit.J,lit.K,lit.L,lit.Q=0x493825,0xB98A45,0xFFE6A1,0xFFF2B8
+    for _,row in ipairs(Art.weapon) do for i=1,#row do
+      local symbol=row:sub(i,i)
+      local color=palette[symbol]
+      if symbol~='.' and color and not lit[symbol] then
+        lit[symbol]=(min(255,(color>>16)+72)<<16)
+          | (min(255,((color>>8)&255)+48)<<8) | min(255,(color&255)+16)
+      end
+    end end
     gunFireImage=ui.load(Art.weapon,{palette=lit})
   end
   mode,elapsed,fireFlash,hurtFlash='play',0,0,0
@@ -332,12 +338,11 @@ local function overlay(kind)
   else
     label(0,78,'Coins '..state.collected..'/2   Kills '..state.kills..'/'..state.totalKills,14)
     label(0,102,'SELECT play again   CANCEL title',12)
-    label(0,128,'Coffer is a pure DeFi protocol.',12)
-    label(0,143,'Yield on RWA baskets comes from swaps',12)
-    label(0,158,'between the tokens in each basket.',12)
-    label(0,173,'We created a completely new AMM primitive',12)
-    label(0,188,'on Solana. Before Coffer, we built an',12)
-    label(0,203,'$87M DeFi protocol.',12)
+    label(0,128,'Yield on RWA baskets comes from swaps',12)
+    label(0,146,'between the tokens in each basket.',12)
+    label(0,164,'We created a completely new AMM primitive',12)
+    label(0,182,'on Solana. Before Coffer, we built an',12)
+    label(0,200,'$87M DeFi protocol.',12)
   end
 end
 local function resume()

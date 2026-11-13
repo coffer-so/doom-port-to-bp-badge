@@ -1,0 +1,161 @@
+{
+  "repository": "https://github.com/freedoom/freedoom",
+  "commit": "21d783c481af9233fa72305b40eb247fa966b49a",
+  "license": "BSD-3-Clause",
+  "files": [
+    {
+      "upstream_path": "sprites/possa1.png",
+      "local_path": "source/sprites_possa1.png",
+      "git_sha": "b4a27d19a07094ea70f52540631f5ef4616f1867",
+      "sha256": "e62029733a0e5382eaae7c39fdc9d1f39f6e6868d378843705882f664ad47863",
+      "size": 2107
+    },
+    {
+      "upstream_path": "sprites/sposa1.png",
+      "local_path": "source/sprites_sposa1.png",
+      "git_sha": "597b2a3f57ddefa7312c7c78afd496c7278ec2dc",
+      "sha256": "b7f9d08324c14a9c44aca100ea6e5e46c020bfb0241b5380513d1d3d584f7a2c",
+      "size": 1322
+    },
+    {
+      "upstream_path": "sprites/pisga0.png",
+      "local_path": "source/sprites_pisga0.png",
+      "git_sha": "5e6a41717c0d2b629ef1f1a0ec8f01b2cfc975a7",
+      "sha256": "b75408948c610a051d58e1a65c9c01c4a297c9ab39463a039a07969434e574c8",
+      "size": 1119
+    },
+    {
+      "upstream_path": "sprites/pisgb0.png",
+      "local_path": "source/sprites_pisgb0.png",
+      "git_sha": "349fc90657eaad697ea21b416ff11c7735ae4a5b",
+      "sha256": "5eb0a89878a185f6bd66793ea95d7fc557f179d38931c97ef47a87858e8e04e2",
+      "size": 1330
+    },
+    {
+      "upstream_path": "sprites/pisgc0.png",
+      "local_path": "source/sprites_pisgc0.png",
+      "git_sha": "30529101a40d553e9683cbedc7e78c643e3bf628",
+      "sha256": "9fdbdecf4dcb712e158cbbe3599d5d314b27a3c6e4952d279665d2bea779ffcd",
+      "size": 1242
+    },
+    {
+      "upstream_path": "patches/graywide.png",
+      "local_path": "source/patches_graywide.png",
+      "git_sha": "d3d9288f56ac20867f3d106d74cc42dc643914f1",
+      "sha256": "f40f7e54b5a2c874691977e3e10ab90ff1db4b31822e1a4d662f5b1aa044949d",
+      "size": 8173
+    },
+    {
+      "upstream_path": "patches/wall00_1.png",
+      "local_path": "source/patches_wall00_1.png",
+      "git_sha": "09a78ef4bf952714d4ce5fff0076ad49cf8f1ce4",
+      "sha256": "427b0d4dc177fbf725a4f058b4161a561664c7554ac8f78adc3530e377238649",
+      "size": 4507
+    },
+    {
+      "upstream_path": "patches/wall02_1.png",
+      "local_path": "source/patches_wall02_1.png",
+      "git_sha": "dfa3e72ee2c51f25436bc6578d14592d194ce595",
+      "sha256": "72caaed22d9434afda9c7834e408022100cb60de00bcbbab1cf53341e3df28f7",
+      "size": 3543
+    },
+    {
+      "upstream_path": "patches/wall02_2.png",
+      "local_path": "source/patches_wall02_2.png",
+      "git_sha": "872ab5b1f4601c90af23511077c947d215a8d977",
+      "sha256": "7edb9cfde46c0ce6a56972e9551779fb935f2e2953a8f246dc42146a21a3a45b",
+      "size": 3165
+    },
+    {
+      "upstream_path": "patches/brown1.png",
+      "local_path": "source/patches_brown1.png",
+      "git_sha": "abc15ffe97bf4e13403e954ba8ffce56d2350222",
+      "sha256": "c1c73b6e10c00b5707207189852fc204d9cc1b0286c05680fdd175ee9f5cca40",
+      "size": 6307
+    },
+    {
+      "upstream_path": "patches/door2_5.png",
+      "local_path": "source/patches_door2_5.png",
+      "git_sha": "72aa8b0f0393207edd6a7714e3853086263f71b5",
+      "sha256": "ab0c3fb542469bf111a271be97e56cfff7372b69ab6e7eea85af11ace688268f",
+      "size": 2146
+    },
+    {
+      "upstream_path": "patches/door3_4.png",
+      "local_path": "source/patches_door3_4.png",
+      "git_sha": "8495cb2a69bf1712904910e3cd4ce6f43a3de5e7",
+      "sha256": "828543316195c94b06827fb3b830895ec749b5a9b673d633ce2a15fdae5f227f",
+      "size": 1415
+    },
+    {
+      "upstream_path": "patches/stwall.png",
+      "local_path": "source/patches_stwall.png",
+      "git_sha": "45f736d78fcebbc96fb34384e20f95751d006209",
+      "sha256": "df7c21a0583138c4334536231a17e748aa1f4669dfd43ffb9a9657c826d28ad5",
+      "size": 3258
+    },
+    {
+      "upstream_path": "COPYING.adoc",
+      "local_path": "source/COPYING.adoc",
+      "git_sha": "57a9f63e95a8f66ac4edc7aa9d446f4297176355",
+      "sha256": "ed60abcf1ff64bf61bf8b4c585ab63643d655a21f8997ba284c01f94ed681fc5",
+      "size": 1611
+    },
+    {
+      "upstream_path": "CREDITS",
+      "local_path": "source/CREDITS",
+      "git_sha": "51a420a3d027e1000ae32f2f325fd62c295ca559",
+      "sha256": "c8913ac997a06605fa9455d867b02b9b63662c2b4b0752ae18b6fcc3e05a17a3",
+      "size": 15539
+    },
+    {
+      "upstream_path": "patches/sw19_1.png",
+      "local_path": "source/patches_sw19_1.png",
+      "git_sha": "af1dc8d432b06c52858da81250c06e00ce07261f",
+      "sha256": "d699b9c6b6a1e07ba4548ae7fb048f1bfff220a83ad698bc3255826aea7c9f25",
+      "size": 5091
+    },
+    {
+      "upstream_path": "patches/sw19_2.png",
+      "local_path": "source/patches_sw19_2.png",
+      "git_sha": "532cb801dfc170aa3928639f0c4aae84cf0357bf",
+      "sha256": "1e666e768a1bd7dbd458bfdfff2cde97791cc69a4ba8c834a9bbd580b03ed577",
+      "size": 5250
+    },
+    {
+      "upstream_path": "patches/sw19_3.png",
+      "local_path": "source/patches_sw19_3.png",
+      "git_sha": "ad1461bf8bac490d11f6895e889811151213694c",
+      "sha256": "2d514e1eb77251458273c66654c7739613c9cf3f6dea7e5b2d1158c7710fce24",
+      "size": 3925
+    },
+    {
+      "upstream_path": "patches/sw19_4.png",
+      "local_path": "source/patches_sw19_4.png",
+      "git_sha": "866a91eb8436d9d3201a9de2b7bd1ea34d8174c5",
+      "sha256": "243830f444058c3a5167b9db190314b532149fed2fc19b1cff95894b44709a10",
+      "size": 3677
+    },
+    {
+      "upstream_path": "patches/wall03_7.png",
+      "local_path": "source/patches_wall03_7.png",
+      "git_sha": "8302b29a97a3b6f6b148d045bd9e332be7989f2a",
+      "sha256": "b6962de1ead5b9e1dc0b881dfc69ec68c8d63eed4a9824576f150d470f4f016a",
+      "size": 2017
+    },
+    {
+      "upstream_path": "patches/door2_4.png",
+      "local_path": "source/patches_door2_4.png",
+      "git_sha": "8252a633f12d746f2f07fd0d05c0c8f331552af8",
+      "sha256": "d33cf0904b8eee62c0b9f1967d4415eb12f6593062085175ee297c17978209a8",
+      "size": 9566
+    },
+    {
+      "upstream_path": "patches/ag128_1.png",
+      "local_path": "source/patches_ag128_1.png",
+      "git_sha": "dd09adbc7c54a75169c1aedb52bb69926bd267af",
+      "sha256": "941246bcae14d481fb3ac32e04762185817b139ee15d3f346c929911c634017c",
+      "size": 1151
+    }
+  ]
+}

@@ -88,6 +88,7 @@ assert(upvalue(on_tick,'mode')=='mission','title SELECT must show rules before s
 budget('start',on_key,'select',false)
 local state=upvalue(on_tick,'state')
 local render=upvalue(on_tick,'render')
+local spawnX,spawnY=state.x,state.y
 state.doorOpen=true
 assert(#state.pickups==2 and #state.props==1 and state.props[1]==state.chest,
     'stress must use final two-coin/chest objective')
@@ -116,10 +117,12 @@ assert(over==0,'world sweep exceeds conservative budget')
 local worldPeak=peak
 peak,peakLabel,over=0,'',0
 profileAppOnly=true
-local poses={{1.5,1.5},{4.5,2.5},{8.5,5.5},{4.5,9.5},
-    {7.5,18.5},{2.5,15.5},{12.5,11.5},{17.5,16.5},{15.5,15.5}}
+local poses={{spawnX,spawnY},{state.chest.x-1,state.chest.y}}
+for _,coin in ipairs(state.pickups) do poses[#poses+1]={coin.x,coin.y} end
+for _,enemy in ipairs(state.enemies) do poses[#poses+1]={enemy.x,enemy.y} end
 local crowdedFrames=0
 for _,p in ipairs(poses) do
+    assert(state:canStand(p[1],p[2]),'stress pose must be a walkable point in current map')
     for a=0,15 do
         local angle=a*math.pi/8
         for _,depth in ipairs({0.17,0.20,0.25,0.4,0.6,1.0,1.5,2.0}) do

@@ -39,6 +39,14 @@ local function path(s, sx, sy, ex, ey)
         end
     end
 end
+local function turn(s, angle)
+    for _=1,40 do
+        local delta=(angle-s.angle+math.pi)%(2*math.pi)-math.pi
+        if math.abs(delta)<1e-5 then return end
+        s:update(math.min(0.05,math.abs(delta)/2.4),{left=delta<0,right=delta>0})
+    end
+    error('button turn failed')
+end
 local function walk(s, route)
     for _, cell in ipairs(route) do
         local tx, ty = cell[1] + 0.5, cell[2] + 0.5
@@ -46,7 +54,7 @@ local function walk(s, route)
             local dx, dy = tx - s.x, ty - s.y
             local d = math.sqrt(dx*dx + dy*dy)
             if d < 0.001 then break end
-            s.angle = math.atan(dy, dx)
+            turn(s,math.atan(dy,dx))
             s:update(math.min(0.05, d / 2.05), {up=true})
         end
         check(math.abs(s.x - tx) < 0.001 and math.abs(s.y - ty) < 0.001,
@@ -57,7 +65,7 @@ end
 
 do
     local s=game.new()
-    check(#s.map==20 and s.width==20 and s.height==20,"map dimensions")
+    check(#s.map==14 and s.width==14 and s.height==14,"compact map dimensions")
     for y=0,s.height-1 do
         check(#s.map[y+1]==s.width,"map row width")
         check(s:tile(0,y)~=0 and s:tile(s.width-1,y)~=0,"closed horizontal border")
@@ -75,32 +83,55 @@ do
         and not s.delivered and not s.won,"objective starts empty")
     check(#s.doors==2,"only two remaining doors")
     for _,d in ipairs(s.doors) do check(not d.locked and not d.open,"doors start unlocked and closed") end
-    check(s:tile(6,4)==0 and s:visible(6.5,3.5,6.5,5.5),"initial doorway removed")
     check(s:visible(s.x,s.y,s.chest.x,s.chest.y),"chest visible from starter room")
     for _,e in ipairs(s.enemies) do check(s:canStand(e.x,e.y),"zombie starts on floor") end
     for _,p in ipairs(s.pickups) do check(s:canStand(p.x,p.y),"coin starts on floor") end
     check(s:canStand(s.chest.x,s.chest.y),"chest starts on floor")
     for y=1,3 do for x=1,9 do check(s:tile(x,y)==0,"wide starter room") end end
-    check(path(s,1,1,8,18)~=nil,"left coin reachable before opening doors")
-    check(path(s,1,1,18,16)==nil,"closed dividing door separates right annex")
+    check(path(s,1,1,2,10)~=nil and path(s,1,1,11,10)~=nil,
+        "both coins reachable with every door closed")
+    local reachable,floors=0,0
+    for y=1,s.height-2 do for x=1,s.width-2 do
+        if s:tile(x,y)==0 then
+            floors=floors+1
+            if path(s,1,1,x,y) then
+                reachable=reachable+1
+                local n=0
+                for _,d in ipairs({{1,0},{-1,0},{0,1},{0,-1}}) do
+                    if s:tile(x+d[1],y+d[2])==0 then n=n+1 end
+                end
+                check(n>=2,"main loop has no dead-end floor cells")
+            end
+        end
+    end end
+    check(reachable==108 and floors==112,"wide outer loop plus optional central passage")
+    s.doorOpen,s.doors[2].open=true,true
+    for y=1,s.height-2 do for x=1,s.width-2 do
+        if s:tile(x,y)==0 then check(path(s,1,1,x,y)~=nil,"opened shortcut connects every floor cell") end
+    end end
 end
 
 -- Physical walk-through of the entire objective; no position teleports.
 do
     local s=fresh()
-    walk(s,assert(path(s,1,1,8,18)))
+    local first=assert(path(s,1,1,2,10))
+    check(#first==10,"spawn to Solana coin is ten grid steps")
+    walk(s,first)
     check(s.coins.solana and not s.coins.coffer and s.collected==1,"walk collects Solana coin")
     check(not s.won and not s.delivered,"one coin does not complete game")
-    walk(s,assert(path(s,8,18,9,9)))
-    s.angle=0
-    check(s:use()=="door" and s.doors[1].open,"dividing door opens without a key")
-    walk(s,assert(path(s,9,9,18,16)))
+    local across=assert(path(s,2,10,11,10))
+    check(#across==9,"coins share a direct nine-step floor")
+    check(s:visible(2.5,10.5,11.5,10.5),"both coins visible along same open hall")
+    walk(s,across)
     check(s.coins.solana and s.coins.coffer and s.collected==2,"walk collects Coffer coin")
     check(s.pickups[1].taken and s.pickups[2].taken,"both world coins disappear once collected")
     check(not s.won and not s.delivered,"two coins alone do not complete game")
-    walk(s,assert(path(s,18,16,4,2)))
+    local back=assert(path(s,11,10,6,2))
+    check(#back==13 and #first+#across+#back==32,"whole objective route is 32 grid steps")
+    walk(s,back)
     check(not s.won,"returning to chest does not auto-deposit")
-    s.angle=0
+    check(not s.doors[1].open and not s.doors[2].open,"entire objective needs no door interaction")
+    turn(s,math.pi)
     check(s:use()=="deposit" and s.delivered and s.won,"CANCEL interaction deliberately deposits both coins")
     check(s.collected==2,"deposit preserves exact collection count")
     local x,hp,ammo=s.x,s.hp,s.ammo
@@ -146,34 +177,31 @@ end
 
 do
     local s=fresh()
-    walk(s,assert(path(s,1,1,6,3)))
-    s.angle=math.pi/2
-    walk(s,{{6,4},{6,5}})
-    check(s.y>5,"player passes removed initial door without interaction")
-    s.x,s.y,s.angle=9.5,9.5,math.pi
-    check(s:use()==nil,"remaining door requires facing it")
-    s.angle=0
-    check(s:tile(10,9)==3 and not s:visible(9.5,9.5,11.5,9.5),"closed door blocks sight")
-    check(s:use()=="door" and s:tile(10,9)==0,"door opens without key or coins")
+    walk(s,assert(path(s,1,1,3,6)))
+    turn(s,math.pi)
+    check(s:use()==nil,"optional door requires facing it")
+    turn(s,0)
+    check(s:tile(4,6)==3 and not s:visible(3.5,6.5,5.5,6.5),"closed door blocks sight")
+    check(s:use()=="door" and s:tile(4,6)==0,"optional door opens without key or coins")
     local version=s._doorsVersion
-    walk(s,{{10,9},{11,9}})
+    walk(s,{{4,6},{5,6}})
     check(s._flowDoors==version,"opening door refreshes pursuit field")
-    walk(s,assert(path(s,11,9,14,13)))
-    s.angle=math.pi/2
+    walk(s,{{6,6},{7,6},{8,6}})
+    turn(s,0)
     check(s:use()=="door" and s.doors[2].open,"second door operates independently")
-    walk(s,{{14,14},{14,15}})
-    check(s:tile(10,9)==0 and s:tile(14,14)==0,"opening second preserves first door")
+    walk(s,{{9,6},{10,6}})
+    check(s:tile(4,6)==0 and s:tile(9,6)==0,"opening second preserves first door")
     check(s.collected==0,"opening doors does not fabricate coins")
 end
 
 do
     local s=fresh()
-    s.x,s.y,s.angle=3.5,3.5,math.pi/2
-    s.enemies={enemy(3.5,5.5)}
-    check(not s:visible(s.x,s.y,3.5,5.5),"stone wall blocks sight")
+    s.x,s.y,s.angle=5.5,3.5,math.pi/2
+    s.enemies={enemy(5.5,10.5)}
+    check(not s:visible(s.x,s.y,5.5,10.5),"stone wall blocks sight")
     check(s:fire()=="shot" and s.enemies[1].hp==2,"stone wall blocks shots")
-    s=fresh();s.x,s.y,s.angle=9.5,9.5,0
-    s.enemies={enemy(11.5,9.5)}
+    s=fresh();s.x,s.y,s.angle=3.5,6.5,0
+    s.enemies={enemy(5.5,6.5)}
     check(s:fire()=="shot","closed door blocks shots")
     s.fireCooldown=0;s:use()
     check(s:fire()=="hit" and s.enemies[1].hp==1,"open door allows shots")
@@ -206,12 +234,12 @@ do
     s.angle=-math.pi/2
     for _=1,100 do s:update(0.1,{up=true}) end
     check(s.y>=1.18 and s.y<1.4,"wall collision stops player radius")
-    s.x,s.y,s.angle=9.5,9.5,0
+    s.x,s.y,s.angle=3.5,6.5,0
     for _=1,20 do s:update(0.1,{up=true}) end
-    check(s.x<9.83,"closed door blocks movement")
+    check(s.x<3.83,"closed door blocks movement")
     s:use()
     for _=1,10 do s:update(0.1,{up=true}) end
-    check(s.x>11,"open door permits movement")
+    check(s.x>5,"open door permits movement")
     s=fresh()
     local x,y,t=s.x,s.y,s.time
     for _,dt in ipairs({0,-1,0/0,-math.huge}) do s:update(dt,{up=true}) end
@@ -240,7 +268,7 @@ end
 
 do
     local s=fresh()
-    s.x,s.y=3.5,7.5;s.enemies={enemy(5.5,5.5)};s.enemies[1].awake=true
+    s.x,s.y=3.5,7.5;s.enemies={enemy(5.5,10.5)};s.enemies[1].awake=true
     local e=s.enemies[1]
     check(not s:visible(e.x,e.y,s.x,s.y),"pursuit fixture has a corner")
     for _=1,300 do
@@ -249,12 +277,12 @@ do
         if s.hp<100 then break end
     end
     check(s.hp<100,"flowfield pursues player around wall")
-    s=fresh();s.x,s.y=9.5,9.5;s.enemies={enemy(11.5,9.5)};s.enemies[1].awake=true
+    s=fresh();s.x,s.y=3.5,6.5;s.enemies={enemy(5.5,6.5)};s.enemies[1].awake=true
     for _=1,100 do s:update(0.05) end
-    check(s.hp==100 and s.enemies[1].x>10.5,"zombie cannot cross or attack through closed door")
+    check(s.hp==100 and s.enemies[1].x>4.5,"zombie cannot cross or attack through closed door")
     s.angle=0;s:use()
     for _=1,100 do s:update(0.05) end
-    check(s.hp<100 and s.enemies[1].x<10.5,"opening door refreshes zombie pursuit")
+    check(s.hp<100 and s.enemies[1].x<4.5,"opening door refreshes zombie pursuit")
 end
 
 print("core_spec: "..checks.." checks passed")

@@ -42,7 +42,7 @@ function ui.load(rows,opts)
   assert(#rows>0 and #rows<=1024 and #rows[1]>0 and #rows[1]<=1024,'invalid native image size')
   for _,row in ipairs(rows) do assert(type(row)=='string' and #row==#rows[1],'ragged native image') end
   pixelCost(#rows[1],#rows)
-  return {w=#rows[1],h=#rows}
+  return {w=#rows[1],h=#rows,rows=rows,palette=opts and opts.palette}
 end
 function ui.clear() objects={} end
 function ui.label(x,y,text,opts) assert(#text<=200);return make({kind='label',x=x,y=y,value=text,opts=opts}) end
@@ -101,17 +101,17 @@ local function checkPromotion()
     if o.kind=='label' then
       if o.y>=128 then
         rows[#rows+1]=o.value
-        assert(o.y==128+(#rows-1)*15 and o.opts.size==12 and o.opts.w==320,
-          'promotion layout does not fit the six reserved rows')
+        assert(o.y==128+(#rows-1)*18 and o.opts.size==12 and o.opts.w==320,
+          'promotion layout does not fit the five reserved rows')
         assert(o.y+o.opts.size<=ui.H and #o.value<=42,'promotion exceeds display bounds')
       end
       stats=stats or (o.value:match('^Coins ') and o.y==78 and o.opts.size==14)
       replay=replay or (o.value=='SELECT play again   CANCEL title' and o.y==102 and o.opts.size==12)
     end
   end
-  assert(stats and replay and #rows==6,'end-screen statistics, controls or six promotion lines missing')
+  assert(stats and replay and #rows==5,'end-screen statistics, controls or five promotion lines missing')
   assert(table.concat(rows,' ')==
-    'Coffer is a pure DeFi protocol. Yield on RWA baskets comes from swaps between the tokens in each basket. '..
+    'Yield on RWA baskets comes from swaps between the tokens in each basket. '..
     'We created a completely new AMM primitive on Solana. Before Coffer, we built an $87M DeFi protocol.',
     'end-screen promotion differs from requested copy')
 end
@@ -174,7 +174,7 @@ held={back=true}
 for _=1,9 do budget(on_tick,80) end
 held={}
 assert(upvalue(on_tick,'mode')=='pause','hold CANCEL does not pause')
-for _,o in ipairs(objects) do assert(o.value~='Coffer is a pure DeFi protocol.','pause screen contains end-screen promotion') end
+for _,o in ipairs(objects) do assert(o.value~='Yield on RWA baskets comes from swaps','pause screen contains end-screen promotion') end
 held={select=true}
 budget(on_key,'select',false)
 assert(upvalue(on_tick,'mode')=='play','resume failed')
@@ -263,6 +263,22 @@ setvalue(on_tick,'skipRenderTick',false)
 budget(on_tick,100)
 assert(orangePixels>=100 and yellowPixels>=100,'shot expired before its yellow/orange muzzle frame')
 assert(lastWeapon.image~=idleImage and lastWeapon.y>idleY,'firing gun did not change frame and recoil')
+local firingImage=lastWeapon.image
+assert(firingImage.rows==Art.weapon and idleImage.rows==Art.weapon and firingImage.palette['.']==nil,
+  'firing gun changed the source pixels or transparent background')
+local litSymbols={}
+for _,row in ipairs(Art.weapon) do for i=1,#row do
+  local symbol=row:sub(i,i)
+  if symbol~='.' and not litSymbols[symbol] then
+    litSymbols[symbol]=true
+    local base,lit=Art.palette[symbol],firingImage.palette[symbol]
+    assert(base and idleImage.palette[symbol]==base and lit,'weapon color missing or idle palette changed')
+    local r,g,b=base>>16,(base>>8)&255,base&255
+    local lr,lg,lb=lit>>16,(lit>>8)&255,lit&255
+    assert(lr>=r and lg>=g and lb>=b and lr+lg+lb>r+g+b,'weapon symbol was not lit: '..symbol)
+    assert(lr>=lg and lg>=lb,'weapon flash palette is not warm: '..symbol)
+  end
+end end
 for _=1,3 do budget(on_tick,100) end
 orangePixels,yellowPixels=0,0
 budget(on_tick,100)

@@ -4,31 +4,27 @@
 local floor, sqrt, abs = math.floor, math.sqrt, math.abs
 local sin, cos, min, max = math.sin, math.cos, math.min, math.max
 local PI2 = math.pi * 2
-local WIDTH, HEIGHT = 20, 20
+local WIDTH, HEIGHT = 14, 14
+-- Three-cell-wide outer loop. Both coins and the return chest are reachable
+-- without opening a door; the central passage is an optional shortcut.
 local MAP = {
-    "11111111111111111111",
-    "10000000002000000001",
-    "10000000002022220201",
-    "10000000002000020001",
-    "10111101102022020021",
-    "10001000002000000001",
-    "11101011102022220201",
-    "10000000102000000001",
-    "10111110102222202221",
-    "10000000003000000001",
-    "10111011102002200201",
-    "10100000102000200001",
-    "10101110102220200021",
-    "10001000002000000001",
-    "10111011102022320201",
-    "10000000002000000001",
-    "10000000002000000001",
-    "10010001002000220001",
-    "10000000002000000001",
-    "11111111111111111111",
+    "11111111111111",
+    "10000000000001",
+    "10000000000001",
+    "10000000000001",
+    "10001111110001",
+    "10002222220001",
+    "10003000030001",
+    "10002222220001",
+    "10002222220001",
+    "10001111110001",
+    "10000000000001",
+    "10000000000001",
+    "10000000000001",
+    "11111111111111",
 }
 -- Keyed by flat map index. Lookup runs only on the two door cells.
-local DOOR_AT = {[9 * WIDTH + 10 + 1]=1, [14 * WIDTH + 14 + 1]=2}
+local DOOR_AT = {[6 * WIDTH + 4 + 1]=1, [6 * WIDTH + 9 + 1]=2}
 local State = {}
 State.__index = State
 
@@ -281,26 +277,26 @@ local function new()
         map = MAP, width = WIDTH, height = HEIGHT,
         x = 1.5, y = 1.5, angle = 0, hp = 100, ammo = 99,
         kills = 0, totalKills = 6, key = false, won = false, dead = false,
-        doorX = 10, doorY = 9, doorOpen = false,
+        doorX = 4, doorY = 6, doorOpen = false,
         coins = {solana=false, coffer=false}, collected = 0, delivered = false,
         chest = chest,
         doors = {
-            {x=10, y=9, locked=false, open=false},
-            {x=14, y=14, locked=false, open=false},
+            {x=4, y=6, locked=false, open=false},
+            {x=9, y=6, locked=false, open=false},
         },
         time = 0, fireCooldown = 0, flash = 0, damageFlash = 0,
         message = "FIND TWO COINS. RETURN TO CHEST.", messageTime = 3,
         enemies = {
             {x=5.5, y=1.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=8.5, y=5.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=4.5, y=9.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=14.5, y=5.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=12.5, y=11.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
-            {x=15.5, y=15.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=2.5, y=5.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=2.5, y=9.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=7.5, y=11.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=11.5, y=9.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
+            {x=11.5, y=4.5, hp=2, alive=true, attack=0, hurt=0, awake=false},
         },
         pickups = {
-            {x=8.5, y=18.5, kind="solana_coin", taken=false},
-            {x=18.5, y=16.5, kind="coffer_coin", taken=false},
+            {x=2.5, y=10.5, kind="solana_coin", taken=false},
+            {x=11.5, y=10.5, kind="coffer_coin", taken=false},
         },
         props = {chest},
         _dist = {}, _queue = {}, _noKeys = {},

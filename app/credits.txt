@@ -1,0 +1,6 @@
+DOOM by Coffer is an original Lua adaptation inspired by Doom, not the original Doom engine.
+Code, original map and pixel sprites: GPL-2.0-or-later, see license.txt.
+Doom wordmark image: original id Software promotional logo, sourced from https://www.vgmpf.com/Wiki/index.php?title=File:Doom_(1993-2003).png . DOOM and its logo remain trademarks of their respective owners; this asset is not relicensed under the code license.
+Coffer mark: supplied by the Coffer team; retained under its owner's rights.
+Solana mark: recreated as pixel artwork from the three-bar brand logo; retained under its owner's rights.
+No original Doom game levels, monsters, textures, sounds, music or WAD data are included.

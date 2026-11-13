@@ -1,40 +1,138 @@
-# Coffer Doom Badge
+# DOOM — Breakpoint Edition by Coffer
 
-A project by **dvp2 & the Coffer team**.
+A special edition for [Solana Breakpoint 2026](https://solana.com/breakpoint), made by [Coffer](https://coffer.so) for the Solana badge.
 
-[Coffer](https://coffer.so/) builds multi-token DEX pools and DeFi primitives on Solana, including custom token baskets and RWA indices. Liquidity providers can earn swap fees; returns are variable and not guaranteed.
+## Two coins. One way home.
 
-[Website](https://coffer.so/) | [Coffer on X](https://x.com/coffer_so)
+You land in a deserted facility. The lights still work. The people don't.
 
-## Status: preparation only — not an installable port
+Somewhere beyond the corridors, two coins float above the floor: one Solana, one Coffer. Fight or evade the zombies, collect both, and bring them back to the ornate Coffer chest. Leave either behind and the job isn't finished.
 
-This repository currently contains a pinned, unmodified snapshot of the public Doomgeneric engine source and the integration plan below. **The Solana OS application has not been implemented, compiled or tested. There is no badge firmware, game demo or installable application in this revision.**
+One compact level. Physical buttons. No touchscreen controls.
 
-The original Doom game was created by id Software. Doomgeneric and its upstream contributors retain their original authorship and copyright. Coffer attribution describes this adaptation project, not ownership or creation of Doom.
+Press SELECT on the title to open the mission guide, then SELECT again to start the game.
 
-## Intended target
+![DOOM title screen with Coffer branding](docs/images/title.png)
+![First-person gameplay on the Solana badge](docs/images/gameplay.png)
+![Collect both coins and return to the Coffer chest](docs/images/objective.png)
 
-- Solana Breakpoint 2026 badge: ESP32-C5HR8, 8 MB PSRAM, ILI9341 320x240, six buttons and microSD.
-- A separate native Doom entry in the existing Solana OS launcher, with a coffer.so footer and safe return to the OS.
-- Movement, turning, fire, use/doors and menu controls; bindings are not implemented yet.
-- Existing Solana OS functionality should be preserved; this is not a replacement Doom-only OS.
+## Controls
 
-The intended native C integration requires a compatible custom Solana OS build. It is **not** a drop-in Lua App Store upload. Solana OS is referenced as an upstream dependency, not copied into this repository.
+| Button | Action |
+| --- | --- |
+| UP / DOWN | Move forward / backward |
+| LEFT / RIGHT | Turn; combine with movement |
+| SELECT, lower right | Title: mission guide; guide: start; game: fire, hold to keep firing |
+| CANCEL, upper right | Interact; hold to pause |
+| SELECT / CANCEL in pause | Resume / return to title |
+| CANCEL on title / rear BOOT | Exit to Solana OS |
 
-## Repository contents
+Every game starts through the illustrated mission guide. Coins are collected by walking into them. Bring both back to the chest, face it, and press CANCEL to secure them. SELECT fires with a yellow muzzle flash and weapon recoil.
 
-- vendor/doomgeneric/: original upstream engine source, license and documentation.
-- UPSTREAMS.json: exact upstream revisions used during preparation.
-- NOTICE.md and LICENSE: provenance and licensing.
+## RGB reactions
 
-## Installation, launch and controls
+Red flashes when a zombie hits you. Solana and Coffer coins trigger their own colours. Deliver both and the badge celebrates with a rainbow and green victory wave.
 
-There are currently **no validated badge installation or launch steps**. Do not flash this repository onto a badge. Build instructions, a tested artifact and the complete button map must accompany the implemented port, rather than speculative commands.
+## Coffer
 
-No retail or shareware WAD is bundled. A future build will require legally obtained compatible game data. Code licensing does not grant rights to Doom artwork, levels, music or commercial WAD files.
+Coffer - we generate yield on RWA baskets. APY comes from swaps between the tokens within the basket. Powered by an RWA-first multi-token DEX on solana. We aim to become the main venue for RWA baskets, spot trading, and yield.
 
-## License and upstream assets
+[coffer.so](https://coffer.so) · [@coffer_so](https://x.com/coffer_so)
 
-The vendored Doomgeneric code retains its GNU GPL v2 license and file-level notices. This project's additions are offered under GPL-2.0-or-later. Upstream screenshot images are omitted; all tracked engine source is retained unchanged.
+---
 
-Solana OS has its own license and exceptions for fonts/logos. Those assets are not distributed here. See NOTICE.md and the upstream repository before redistributing any firmware incorporating them.
+## Technical information — install, build and modify
+
+### Install from the Solana OS App Store
+
+The App Store release is pending final validation and store approval. The prepared app is **DOOM**, ID `doom-by-coffer`.
+
+After approved release, on a [Solana Breakpoint 2026 badge](https://solana.com/breakpoint/badge), connect Wi-Fi, open **App Store**, search **DOOM**, select the game by the Coffer team and install it. Open it from **Apps → DOOM**. USB installation is available below.
+
+[DOOM listing](https://solana.com/breakpoint/badge/apps/app?id=doom-by-coffer) · [Solana OS App Store](https://solana.com/breakpoint/badge/apps)
+
+### Build the upload package
+
+The application is Lua. ESP-IDF, a C compiler and replacement firmware are not needed. The App Store compiles the Lua code for the badge when publishing.
+
+```sh
+git clone https://github.com/coffer-so/doom-port-to-bp-badge.git
+cd doom-port-to-bp-badge
+python3 tools/package.py
+```
+
+Output: `dist/doom-by-coffer-1.0.0.zip`. It contains only the app and its assets, never tests, photographs, credentials or the legacy C engine.
+
+### Install and test over USB
+
+Requires a microSD card and [uv](https://docs.astral.sh/uv/). Target tested: ESP32-C5 badge, Solana OS 2.1.0, 8 MB PSRAM. Earlier builds were also tested on 2.0.0.
+
+```sh
+uv run tools/badge.py --port /dev/cu.usbserial-310 info
+uv run tools/badge.py --port /dev/cu.usbserial-310 upload app --run
+uv run tools/badge.py --port /dev/cu.usbserial-310 run
+uv run tools/badge.py --port /dev/cu.usbserial-310 mem
+uv run tools/badge.py --port /dev/cu.usbserial-310 shot --shot work/title.png
+```
+
+Use your own serial port if it differs (`/dev/cu.usbserial-*` on macOS; `/dev/ttyUSB*` on Linux). Close other serial monitors first. The uploader sends files through the documented Solana OS console and verifies SHA-256; it does not flash or replace Solana OS. Opening the CH340 USB port can reset the badge. The only requested permission is `led`; there is no network, wallet or token access.
+
+### Validate changes
+
+Install Lua 5.5, then run:
+
+```sh
+python3 tools/check.py --lua lua5.5
+python3 tools/check.py --lua lua5.5 --stress
+```
+
+For badge-number precision, build the official Lua 5.5.1 interpreter with 32-bit integers and floats, then pass its path to the checker:
+
+```sh
+mkdir -p work/lua32
+curl -fL https://www.lua.org/ftp/lua-5.5.1.tar.gz -o work/lua32/lua.tar.gz
+tar -xzf work/lua32/lua.tar.gz -C work/lua32
+make -C work/lua32/lua-5.5.1 macosx MYCFLAGS=-DLUA_32BITS=1
+python3 tools/check.py --lua work/lua32/lua-5.5.1/src/lua --stress
+```
+
+Use the Lua make target appropriate for your OS. Tests cover a complete coin-collection route, combat, chest deposit rules, mission UI, lifecycle, RGB effects, native texture cache and crowded render scenes.
+
+### Change the game — people and AI agents
+
+| File | What to change |
+| --- | --- |
+| `app/game.lua` | Map, zombie behaviour, coin/chest positions and mission rules |
+| `app/main.lua` | Title, controls, HUD and renderer |
+| `app/art_detail.lua`, `app/coins.lua` | Zombie/chest sprites and branded coins |
+| `app/textures.lua`, `app/surfaces.lua` | Prelit materials and bounded native column cache |
+| `app/sprites.lua` | Bounded native sprite cache; wall-occluded sprites retain precise clipping |
+| `app/rgb.lua` | Damage, collection and victory LED effects |
+| `app/app.json` | Permanent ID, display name, version, exact store text and permissions |
+| `assets/`, `tools/prepare_art.py` | Editable logo sources and PNG export |
+
+The prebuilt artwork is included. To rebuild edited SVGs/logos on macOS:
+
+```sh
+brew install cairo ffmpeg
+export DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix)/lib"
+uv run --with cairosvg python tools/prepare_art.py
+uv run tools/compile_coins.py
+python3 tools/package.py
+```
+
+`compile_coins.py` turns `assets/solana_coin.svg` and `assets/coffer_coin.svg` into `app/coins.lua`. On Linux, install Cairo and FFmpeg through your distribution; the `DYLD_…` line is macOS only.
+
+Read `AGENTS.md` before automated changes. Edit, run `tools/check.py`, rebuild with `tools/package.py`, then sideload and measure with `lua mem` after returning Home. Use physical keys for held-input tests: console `key` commands inject presses, not button holds. Keep each callback under 200,000 VM instructions and release every app allocation on exit.
+
+For a user-requested release, submit the tested package through [Submit an app](https://solana.com/breakpoint/badge/apps/submit). Future updates keep the same app ID and increment the manifest version. The store runs compilation and review; only an approved listed version appears in search. A linked X account is required for publication.
+
+### Architecture and limits
+
+Original Lua raycaster, one 20×20 level, six zombies, exactly two coins and one chest. Canvas 160×92 at 2×; 40 wall rays, prelit textures, bounded native wall and sprite caches, and a cheap input tick after three expensive renders. Sprite detail is retained while wall columns use a lower-detail mode. RGB animations update at most 10 times per second. The final Solana OS 2.1.0 device run reported **9 FPS** (about 10), render CPU averaging **54 ms** and peaking at **115 ms**. The earlier OS 2.0.0 build measured 4 FPS. The requested 30 FPS has not been achieved. See `docs/validation.md` for measurements and checks.
+
+This is an original Doom-style adaptation, not the id Software C engine or a WAD-compatible source port. The original Doomgeneric preparation snapshot remains in `vendor/doomgeneric` and is excluded from the application. [Port research](docs/research.md) and [platform details](docs/platform.md) document the alternatives and constraints.
+
+Code, original map and game sprites: GPL-2.0-or-later. Brand logos retain their owners' rights. See `LICENSE`, `NOTICE.md` and `app/credits.txt`.
+
+have fun!

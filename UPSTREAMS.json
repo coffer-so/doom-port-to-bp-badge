@@ -1,0 +1,14 @@
+{
+  "doomgeneric": {
+    "url": "https://github.com/ozkl/doomgeneric",
+    "commit": "e257a09527062bfb986b6e5e0780839b6cbd5b71",
+    "license_file": "vendor/doomgeneric/LICENSE",
+    "export": "all tracked source/documentation, excluding screenshots/"
+  },
+  "solana_os": {
+    "url": "https://github.com/solana-foundation/solana-os",
+    "inspected_commit": "64a474b698008dfff09d321dd1a8584ba96ccb5f",
+    "included": false,
+    "app_api": "https://github.com/solana-foundation/solana-os/blob/main/docs/LUA_API.md"
+  }
+}

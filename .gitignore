@@ -1,0 +1,17 @@
+/.env*
+!/.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.wad
+*.WAD
+*.sqlite*
+*.db
+*.log
+.DS_Store
+/build/
+/work/
+/reports/
+/media/
+/node_modules/

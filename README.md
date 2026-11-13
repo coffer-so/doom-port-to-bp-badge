@@ -45,9 +45,9 @@ Coffer - we generate yield on RWA baskets. APY comes from swaps between the toke
 
 ### Install from the Solana OS App Store
 
-The App Store release is pending final validation and store approval. The prepared app is **DOOM**, ID `doom-by-coffer`.
+Version **1.0.0** has been submitted as **DOOM** in **Games**, ID `doom-by-coffer`, and is awaiting an organiser’s review. It is already installed and tested on the development badge through USB.
 
-After approved release, on a [Solana Breakpoint 2026 badge](https://solana.com/breakpoint/badge), connect Wi-Fi, open **App Store**, search **DOOM**, select the game by the Coffer team and install it. Open it from **Apps → DOOM**. USB installation is available below.
+After approval, on a [Solana Breakpoint 2026 badge](https://solana.com/breakpoint/badge), connect Wi-Fi, open **App Store**, search **DOOM**, select **DOOM** by **sepezho** (the @coffer_so team) and install it. Open it from **Apps → DOOM**. USB installation is available below.
 
 [DOOM listing](https://solana.com/breakpoint/badge/apps/app?id=doom-by-coffer) · [Solana OS App Store](https://solana.com/breakpoint/badge/apps)
 
@@ -126,6 +126,19 @@ python3 tools/package.py
 Read `AGENTS.md` before automated changes. Edit, run `tools/check.py`, rebuild with `tools/package.py`, then sideload and measure with `lua mem` after returning Home. Use physical keys for held-input tests: console `key` commands inject presses, not button holds. Keep each callback under 200,000 VM instructions and release every app allocation on exit.
 
 For a user-requested release, submit the tested package through [Submit an app](https://solana.com/breakpoint/badge/apps/submit). Future updates keep the same app ID and increment the manifest version. The store runs compilation and review; only an approved listed version appears in search. A linked X account is required for publication.
+
+### Publish source changes to GitHub
+
+With an SSH key already linked to your GitHub account:
+
+```sh
+git remote set-url --push origin git@github.com:coffer-so/doom-port-to-bp-badge.git
+git add app assets tools tests docs README.md AGENTS.md NOTICE.md
+git commit -m "Update DOOM badge game"
+git push origin main
+```
+
+The App Store upload is a separate step: build `dist/doom-by-coffer-1.0.0.zip`, import it in the submission form, check **Games**, **Listed** and LED-only permissions, then publish. For future releases, increment the version in `app/app.json`, keep ID `doom-by-coffer`, and give `--out` a matching filename, for example `python3 tools/package.py --out dist/doom-by-coffer-1.0.1.zip`.
 
 ### Architecture and limits
 

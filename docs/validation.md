@@ -50,5 +50,6 @@ Lua 5.5.1 compiled with `-DLUA_32BITS=1`: 32-bit integers and floats,
 - 16 Python packaging/guarded USB protocol tests.
 
 The package excludes tests, private photographs, device logs, credentials, WAD
-data and the legacy C engine. App Store publication is submitted separately
-and requires server compilation/review before the release appears in search.
+data and the legacy C engine. Version 1.0.0 was submitted to the Solana OS App Store under Games. The store
+currently requires an organiser’s review; other users cannot find/install it
+until a version is approved.

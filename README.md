@@ -15,6 +15,17 @@ Press SELECT on the title to open the mission guide, then SELECT again to start 
 ![DOOM title screen with Coffer branding](docs/images/title.png)
 ![First-person gameplay on the Solana badge](docs/images/gameplay.png)
 ![Collect both coins and return to the Coffer chest](docs/images/objective.png)
+
+## Coffer
+
+Coffer builds multi-token pools and RWA baskets on Solana. We generate yield on RWA baskets: APY comes from swaps between the tokens within each basket. Powered by an RWA-first multi-token DEX, we aim to become the main venue for RWA baskets, spot trading, and yield.
+
+[coffer.so](https://coffer.so) · [@coffer_so](https://x.com/coffer_so)
+
+[![Coffer Explore Baskets: multi-token pools and RWA baskets](docs/images/coffer-baskets.png)](https://coffer.so)
+
+## Level map
+
 ![Level map with spawn, coins, chest, enemies, doors, medkits and ammunition](docs/images/map.png)
 
 Enemies use a brown, red-eyed, spiky imp-style design, adapted from freely licensed historical Freedoom artwork.
@@ -41,12 +52,6 @@ Face a nearby closed door to see **“cancel to open the door”**. Press CANCEL
 ## RGB reactions
 
 Red flashes when a zombie hits you. Solana and Coffer coins trigger their own colours. Deliver both and the badge celebrates with a rainbow and green victory wave.
-
-## Coffer
-
-Coffer - we generate yield on RWA baskets. APY comes from swaps between the tokens within the basket. Powered by an RWA-first multi-token DEX on solana. We aim to become the main venue for RWA baskets, spot trading, and yield.
-
-[coffer.so](https://coffer.so) · [@coffer_so](https://x.com/coffer_so)
 
 ---
 
